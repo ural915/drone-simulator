@@ -18,11 +18,14 @@ let camMode = "photo";
 let mediaRecorder, recordChunks = [];
 let recordSeconds = 0;
 let lastWarnState = { battery30: false, battery15: false };
+let leafletMap, droneMarker, homeMarker;
+let mapExpanded = false;
 
 // Ayarlar > gerçek DJI Fly menü yapısı (Güvenlik/Kontrol/Kamera/İletim/Hakkında)
 const settings = {
   units: "m",             // "m" | "ft"
   stickMode: 2,            // 1 | 2 | 3 (Mode 2 = TR/dünya standardı)
+  unlimitedRange: true,    // simülatörde varsayılan: mesafe/irtifa sınırı yok
   maxAltitude: 120,
   maxDistance: 500,
   obstacleAvoidance: "brake", // "bypass" | "brake" | "off"
@@ -108,6 +111,7 @@ function teleportTo(loc) {
     orientation: { heading: Cesium.Math.toRadians(loc.heading || 0), pitch: Cesium.Math.toRadians(-25), roll: 0 },
     duration: 2.5,
   });
+  recenterMap();
 }
 
 async function initCesium() {
@@ -189,8 +193,11 @@ function renderSettingsTab(tab) {
     html += row("Gelişmiş Eve Dönüş", "Optimum rota / güvenli irtifa ile döner", toggleHtml("advancedRTH", settings.advancedRTH));
     html += row("Radar Haritasını Göster", "Eve dönüş sırasında engel haritası", toggleHtml("displayRadarMap", settings.displayRadarMap));
     html += `<div class="set-section">Uçuş Sınırları</div>`;
-    html += row("Maks. İrtifa", "Kalkış noktasına göre", sliderHtml("maxAltitude", 20, 500, 5, settings.maxAltitude, "m"));
-    html += row("Maks. Mesafe", "Kalkış noktasına göre", sliderHtml("maxDistance", 50, 8000, 50, settings.maxDistance, "m"));
+    html += row("Sınırsız Mesafe/İrtifa", "Simülatörde varsayılan — gerçek DJI'da bu seçenek yok", toggleHtml("unlimitedRange", settings.unlimitedRange));
+    if (!settings.unlimitedRange) {
+      html += row("Maks. İrtifa", "Kalkış noktasına göre", sliderHtml("maxAltitude", 20, 500, 5, settings.maxAltitude, "m"));
+      html += row("Maks. Mesafe", "Kalkış noktasına göre", sliderHtml("maxDistance", 50, 8000, 50, settings.maxDistance, "m"));
+    }
     html += `<div class="set-section">Engelden Kaçınma</div>`;
     html += row("Engelden Kaçınma Eylemi", "Sport modunda ve Manuel'de her zaman kapalı", selectHtml("obstacleAvoidance", [
       { v: "bypass", l: "Etrafından Dolaş" }, { v: "brake", l: "Fren Yap" }, { v: "off", l: "Kapalı" },
@@ -287,8 +294,8 @@ function wireSettingsControls() {
 
 function applySettings() {
   if (!drone) return;
-  drone.maxAltitude = settings.maxAltitude;
-  drone.maxDistance = settings.maxDistance;
+  drone.maxAltitude = settings.unlimitedRange ? Infinity : settings.maxAltitude;
+  drone.maxDistance = settings.unlimitedRange ? Infinity : settings.maxDistance;
   drone.obstacleAvoidanceMode = settings.obstacleAvoidance;
 }
 
@@ -343,6 +350,45 @@ function setupGimbalDrag() {
   };
   window.addEventListener("pointerup", end);
   window.addEventListener("pointercancel", end);
+}
+
+// Gerçek OSM haritası - drone'un canlı konumu (DJI Fly'daki Harita görünümü gibi).
+function setupMap() {
+  leafletMap = L.map("mapCanvas", {
+    zoomControl: false, attributionControl: false, dragging: true,
+    scrollWheelZoom: false, doubleClickZoom: false, touchZoom: true,
+  }).setView([drone.homeLat, drone.homeLon], 17);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(leafletMap);
+
+  homeMarker = L.marker([drone.homeLat, drone.homeLon], {
+    icon: L.divIcon({ className: "", html: '<div class="home-marker"></div>', iconSize: [12, 12], iconAnchor: [6, 6] }),
+  }).addTo(leafletMap);
+
+  droneMarker = L.marker([drone.homeLat, drone.homeLon], {
+    icon: L.divIcon({ className: "", html: '<div class="drone-marker"></div>', iconSize: [14, 14], iconAnchor: [7, 10] }),
+  }).addTo(leafletMap);
+
+  $("mapExpandBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    mapExpanded = !mapExpanded;
+    $("minimap").classList.toggle("expanded", mapExpanded);
+    $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+    leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
+    $("minimap").addEventListener(
+      "transitionend",
+      () => { leafletMap.invalidateSize(); if (!mapExpanded) recenterMap(); },
+      { once: true }
+    );
+  });
+}
+
+// Yeni bir konuma ışınlandığında (uçak değişimi/lokasyon seçimi) haritayı da oraya taşı.
+function recenterMap() {
+  if (!leafletMap) return;
+  leafletMap.setView([drone.homeLat, drone.homeLon], 17, { animate: false });
+  homeMarker.setLatLng([drone.homeLat, drone.homeLon]);
+  droneMarker.setLatLng([drone.homeLat, drone.homeLon]);
 }
 
 function setupJoysticks() {
@@ -552,12 +598,26 @@ function updateHUD() {
   const proximityWarn = drone.flying && minActiveDist < 4;
   safetyDot.className = "safety-dot" + (proximityBad || drone.battery <= 15 ? " danger" : proximityWarn || drone.battery <= 30 ? " warn" : "");
 
-  // minimap
-  const dot = $("droneDot");
-  const scale = 45 / Math.max(30, drone.homeDistance);
-  const mx = Cesium.Math.clamp(drone.x * scale, -45, 45);
-  const my = Cesium.Math.clamp(drone.y * scale, -45, 45);
-  dot.style.transform = `translate(${mx}px, ${-my}px) rotate(${Cesium.Math.toDegrees(drone.heading)}deg)`;
+  updateMap();
+}
+
+// ENU (x=doğu, y=kuzey metre) ofsetini gerçek enlem/boylama çevirir (küçük mesafeler için düzlem yaklaşıklığı yeterli).
+const EARTH_R = 6378137;
+function droneLatLon() {
+  const dLat = (drone.y / EARTH_R) * (180 / Math.PI);
+  const dLon = (drone.x / (EARTH_R * Math.cos((drone.homeLat * Math.PI) / 180))) * (180 / Math.PI);
+  return [drone.homeLat + dLat, drone.homeLon + dLon];
+}
+
+function updateMap() {
+  if (!leafletMap) return;
+  const [lat, lon] = droneLatLon();
+  droneMarker.setLatLng([lat, lon]);
+  const el = droneMarker.getElement()?.querySelector(".drone-marker");
+  if (el) el.style.transform = `rotate(${Cesium.Math.toDegrees(drone.heading)}deg)`;
+  if (!mapExpanded) {
+    leafletMap.setView([lat, lon], leafletMap.getZoom(), { animate: false });
+  }
 }
 
 function updateCamera() {
@@ -655,6 +715,7 @@ async function boot() {
   setupModeSwitch();
   setupActions();
   setupSettingsPanel();
+  setupMap();
   buildLocationList();
   applyThirdModeLabel();
   applySettings();
@@ -677,5 +738,11 @@ buildAircraftGrid();
 
 $("startBtn").addEventListener("click", async () => {
   $("startOverlay").style.display = "none";
-  await boot();
+  try {
+    await boot();
+  } catch (err) {
+    console.error("boot() hata verdi:", err);
+    $("startOverlay").style.display = "flex";
+    $("tokenWarn").textContent = "Bir hata oluştu: " + err.message + " (konsolu kontrol et)";
+  }
 });

@@ -190,14 +190,26 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .tele-arrow{color:var(--accent); font-weight:700;}
 .tele-div{width:1px; height:26px; background:var(--line);}
 
-/* ---------- minimap ---------- */
+/* ---------- harita (Leaflet, gerçek OSM) ---------- */
 #minimap{
-  position:absolute; bottom:150px; left:16px; width:110px;height:110px;border-radius:50%;
-  background:radial-gradient(circle, #10201a 0%, #0a0d10 80%); border:2px solid var(--line); overflow:hidden;
+  position:absolute; bottom:150px; left:16px; width:110px; height:110px; border-radius:50%;
+  border:2px solid var(--line); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
+  background:#10201a;
 }
-#minimap .center-dot{position:absolute; left:50%; top:50%; width:6px;height:6px; margin:-3px; border-radius:50%; background:var(--accent-danger);}
-#minimap .drone-dot{position:absolute; width:0;height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:10px solid var(--accent); transform-origin:50% 70%;}
-#minimap .ring{position:absolute; border:1px solid rgba(255,255,255,0.08); border-radius:50%;}
+#minimap.expanded{
+  width:min(520px, 88vw); height:min(420px, 60vh); border-radius:14px; bottom:56px; left:50%; transform:translateX(-50%);
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+#mapCanvas{position:absolute; inset:0;}
+#mapExpandBtn{
+  position:absolute; top:6px; right:6px; z-index:1000; width:26px; height:26px; border-radius:6px;
+  background:rgba(15,18,22,0.85); border:1px solid var(--line); color:var(--text); font-size:13px; cursor:pointer;
+}
+.drone-marker{
+  width:0;height:0; border-left:7px solid transparent; border-right:7px solid transparent;
+  border-bottom:14px solid var(--accent); transform-origin:50% 70%; filter:drop-shadow(0 0 3px rgba(0,0,0,0.6));
+}
+.home-marker{width:12px;height:12px;border-radius:50%;background:var(--accent-danger);border:2px solid #fff;}
 
 /* ---------- warnings ---------- */
 #warnings{position:absolute; top:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center;}

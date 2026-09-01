@@ -33,8 +33,8 @@ export class Drone {
     this._sensorTimer = 0;
 
     // Ayarlar menüsünden (Güvenlik sekmesi) gelen sınırlar ve engel kaçınma davranışı
-    this.maxAltitude = 120; // m, DJI varsayılanı
-    this.maxDistance = 500; // m
+    this.maxAltitude = Infinity; // Ayarlar > Güvenlik'ten değiştirilebilir (varsayılan: sınırsız, simülatör modu)
+    this.maxDistance = Infinity;
     this.obstacleAvoidanceMode = "brake"; // "bypass" | "brake" | "off"
 
     this.entity = this._createEntity();
