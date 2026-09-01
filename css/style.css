@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg:#0a0d10;
+  --panel:rgba(15,18,22,0.72);
+  --panel-solid:#12161a;
+  --accent:#2fd672;
+  --accent-warn:#ffb020;
+  --accent-danger:#ff4d4f;
+  --text:#eef2f5;
+  --text-dim:#9aa7b0;
+  --line:rgba(255,255,255,0.12);
+  font-family:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;color:var(--text);}
+#cesiumContainer{position:absolute;inset:0;}
+.cesium-widget-credits{display:none !important;}
+
+#hud{position:absolute;inset:0;pointer-events:none;font-variant-numeric:tabular-nums;}
+#hud .clickable{pointer-events:auto;}
+
+/* ---------- top bar ---------- */
+#topbar{
+  position:absolute; top:0; left:0; right:0; height:52px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 14px; background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+}
+.top-group{display:flex; align-items:center; gap:14px;}
+.pill{
+  display:flex; align-items:center; gap:6px;
+  background:var(--panel); border:1px solid var(--line); border-radius:20px;
+  padding:5px 10px; font-size:12px; font-weight:600; color:var(--text);
+  backdrop-filter:blur(6px);
+}
+.pill svg{width:14px;height:14px;flex:none;}
+.mode-badge{
+  width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-weight:700; font-size:13px; background:var(--accent); color:#031a0d;
+}
+.mode-badge.S{background:var(--accent-danger); color:#2a0000;}
+.mode-badge.C{background:#7aa7ff; color:#001233;}
+.battery-bar{width:22px;height:12px;border:1.5px solid var(--text); border-radius:2px; position:relative; padding:1px;}
+.battery-bar::after{content:"";position:absolute;right:-4px;top:3px;width:2px;height:6px;background:var(--text);}
+.battery-fill{height:100%; background:var(--accent); border-radius:1px;}
+.battery-fill.warn{background:var(--accent-warn);}
+.battery-fill.danger{background:var(--accent-danger);}
+.icon-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);
+}
+.icon-btn:active{background:rgba(255,255,255,0.2);}
+.rec-indicator{
+  display:flex;align-items:center;gap:7px;background:rgba(255,77,79,0.16);border:1px solid rgba(255,77,79,0.4);
+  border-radius:20px;padding:5px 11px;font-weight:700;font-size:12.5px;color:#ffb3b3;
+  font-family:'JetBrains Mono',monospace;
+}
+.rec-dot{width:9px;height:9px;border-radius:50%;background:var(--accent-danger);animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:0.2;}}
+
+.rc-badge{background:rgba(47,214,114,0.16); border-color:rgba(47,214,114,0.4); color:var(--accent);}
+
+.safety-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex:none;}
+.safety-dot.warn{background:var(--accent-warn);box-shadow:0 0 6px var(--accent-warn);}
+.safety-dot.danger{background:var(--accent-danger);box-shadow:0 0 6px var(--accent-danger);}
+
+/* ---------- location panel ---------- */
+#locPanel{
+  position:absolute; top:58px; right:14px; width:280px; max-height:70vh; overflow-y:auto;
+  background:var(--panel-solid); border:1px solid var(--line); border-radius:12px;
+  padding:8px; display:none; pointer-events:auto;
+}
+#locPanel.open{display:block;}
+#locPanel h3{margin:6px 8px 10px;font-size:13px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.loc-item{
+  padding:10px 10px; border-radius:8px; cursor:pointer; display:flex; flex-direction:column; gap:2px;
+}
+.loc-item:hover{background:rgba(255,255,255,0.06);}
+.loc-item b{font-size:13.5px;}
+.loc-item span{font-size:11.5px;color:var(--text-dim);}
+
+/* ---------- sensors ---------- */
+#sensorCluster{
+  position:absolute; top:58px; left:50%; transform:translateX(-50%);
+  display:grid; grid-template-columns:repeat(3,24px); grid-template-rows:repeat(3,24px); gap:3px;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px;
+}
+.sensor{border-radius:4px; background:rgba(255,255,255,0.08);}
+.sensor.ok{background:var(--accent);}
+.sensor.warn{background:var(--accent-warn);}
+.sensor.danger{background:var(--accent-danger);}
+.sensor.inactive{background:rgba(255,255,255,0.03);}
+.s-front{grid-column:2;grid-row:1;} .s-left{grid-column:1;grid-row:2;}
+.s-center{grid-column:2;grid-row:2;background:transparent;} .s-right{grid-column:3;grid-row:2;}
+.s-back{grid-column:2;grid-row:3;} .s-up{grid-column:1;grid-row:1;} .s-down{grid-column:3;grid-row:3;}
+
+/* ---------- right camera panel ---------- */
+#rightPanel{
+  position:absolute; right:14px; top:64px; display:flex; flex-direction:column; align-items:center; gap:10px;
+  background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 8px; pointer-events:auto;
+}
+.vslider{writing-mode:vertical-lr; direction:rtl; width:26px; height:78px; accent-color:var(--accent); cursor:pointer;}
+.panel-label{font-size:10px;color:var(--text-dim);text-align:center;font-weight:600;}
+.zoom-label{font-size:12px;font-weight:700;}
+
+.zoom-badge{
+  width:38px;height:38px;border-radius:50%;background:var(--panel-solid);border:1.5px solid var(--line);
+  color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;
+}
+.zoom-badge:active{background:rgba(255,255,255,0.15);}
+
+#gimbalReadout{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.55); color:var(--text); font-family:'JetBrains Mono',monospace;
+  font-size:15px; font-weight:700; padding:6px 14px; border-radius:8px; display:none; pointer-events:none;
+}
+#gimbalReadout.show{display:block;}
+
+#moreMenu{
+  position:absolute; top:58px; right:14px; background:var(--panel-solid); border:1px solid var(--line);
+  border-radius:12px; padding:6px; display:none; flex-direction:column; min-width:210px; pointer-events:auto;
+}
+#moreMenu.open{display:flex;}
+.menu-item{padding:11px 12px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;}
+.menu-item:hover{background:rgba(255,255,255,0.06);}
+
+/* ---------- settings panel (DJI Fly gerçek sekme yapısı) ---------- */
+#settingsPanel{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:min(420px, 92vw); height:min(560px, 82vh);
+  background:var(--panel-solid); border:1px solid var(--line); border-radius:16px;
+  display:none; flex-direction:column; overflow:hidden; pointer-events:auto; z-index:40;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+#settingsPanel.open{display:flex;}
+.settings-header{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);}
+.settings-header h3{margin:0; font-size:15px;}
+.settings-header button{background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:4px;}
+.settings-tabs{display:flex; overflow-x:auto; border-bottom:1px solid var(--line); flex:none;}
+.settings-tab{
+  flex:1; background:none; border:none; color:var(--text-dim); font-size:11.5px; font-weight:600;
+  padding:11px 6px; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent;
+}
+.settings-tab.active{color:var(--text); border-bottom-color:var(--accent);}
+.settings-body{flex:1; overflow-y:auto; padding:6px 14px;}
+.set-row{display:flex; align-items:center; justify-content:space-between; padding:12px 2px; border-bottom:1px solid rgba(255,255,255,0.06); gap:12px;}
+.set-row .set-label{font-size:13px; font-weight:600;}
+.set-row .set-sub{font-size:11px; color:var(--text-dim); margin-top:2px;}
+.set-row .set-val{font-size:12px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
+.set-section{font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin:14px 2px 2px;}
+.set-section:first-child{margin-top:4px;}
+
+.set-toggle{position:relative; width:42px; height:24px; border-radius:14px; background:rgba(255,255,255,0.15); border:none; cursor:pointer; flex:none;}
+.set-toggle::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;}
+.set-toggle.on{background:var(--accent);}
+.set-toggle.on::after{transform:translateX(18px);}
+
+.set-select{display:flex; background:rgba(255,255,255,0.06); border-radius:8px; padding:2px; gap:2px;}
+.set-select button{background:none;border:none;color:var(--text-dim);font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;cursor:pointer;}
+.set-select button.active{background:var(--panel-solid);color:var(--text);}
+
+.set-slider{width:120px; accent-color:var(--accent);}
+.set-btn{background:rgba(255,255,255,0.08); border:1px solid var(--line); color:var(--text); font-size:12px; font-weight:600; padding:7px 12px; border-radius:8px; cursor:pointer;}
+.set-btn.danger{color:#ffb3b3; border-color:rgba(255,77,79,0.4);}
+
+.cam-toggle{display:flex;flex-direction:column;gap:4px;}
+.cam-toggle-btn{
+  background:transparent;border:none;color:var(--text-dim);font-size:10px;font-weight:700;
+  letter-spacing:.04em;padding:4px 2px;cursor:pointer;border-radius:6px;
+}
+.cam-toggle-btn.active{background:var(--panel-solid);color:var(--text);}
+
+.shutter-btn{
+  width:50px;height:50px;border-radius:50%;background:transparent;border:3px solid var(--text);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+}
+.shutter-inner{width:38px;height:38px;border-radius:50%;background:var(--text);transition:all .15s;}
+.shutter-btn.video-mode .shutter-inner{background:var(--accent-danger);}
+.shutter-btn.recording .shutter-inner{border-radius:6px;width:22px;height:22px;background:var(--accent-danger);}
+
+/* ---------- telemetry bottom-center (gerçek DJI Fly stili: ok + değer / etiket + değer) ---------- */
+#telemetry{
+  position:absolute; bottom:150px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:8px 16px; font-family:'JetBrains Mono',monospace;
+}
+.tele-group{display:flex; flex-direction:column; gap:1px;}
+.tele-row{font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:4px;}
+.tele-row.tele-sub{font-size:11.5px; font-weight:600; color:var(--text-dim);}
+.tele-arrow{color:var(--accent); font-weight:700;}
+.tele-div{width:1px; height:26px; background:var(--line);}
+
+/* ---------- minimap ---------- */
+#minimap{
+  position:absolute; bottom:150px; left:16px; width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle, #10201a 0%, #0a0d10 80%); border:2px solid var(--line); overflow:hidden;
+}
+#minimap .center-dot{position:absolute; left:50%; top:50%; width:6px;height:6px; margin:-3px; border-radius:50%; background:var(--accent-danger);}
+#minimap .drone-dot{position:absolute; width:0;height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:10px solid var(--accent); transform-origin:50% 70%;}
+#minimap .ring{position:absolute; border:1px solid rgba(255,255,255,0.08); border-radius:50%;}
+
+/* ---------- warnings ---------- */
+#warnings{position:absolute; top:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center;}
+.warn-toast{background:rgba(255,77,79,0.92); color:#fff; font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:8px;}
+
+/* ---------- bottom control bar ---------- */
+#bottombar{
+  position:absolute; bottom:0; left:0; right:0; height:150px;
+  display:flex; align-items:center; justify-content:space-between; padding:0 20px 14px;
+  pointer-events:none;
+}
+.joy-wrap{pointer-events:auto; display:flex; flex-direction:column; align-items:center; gap:4px;}
+.joy-base{
+  width:118px;height:118px;border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10),rgba(255,255,255,0.03));
+  border:1px solid var(--line); position:relative; touch-action:none;
+}
+.joy-stick{
+  width:46px;height:46px;border-radius:50%; background:linear-gradient(145deg,#3a4048,#1c2126);
+  border:1px solid rgba(255,255,255,0.25); position:absolute; left:50%; top:50%; margin:-23px;
+  box-shadow:0 3px 8px rgba(0,0,0,0.5); transition:transform 0.05s linear;
+}
+.joy-caption{font-size:10px;color:var(--text-dim); letter-spacing:.05em;}
+
+#midControls{pointer-events:auto; display:flex; flex-direction:column; align-items:center; gap:8px;}
+.mode-switch{display:flex; background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:3px; gap:3px;}
+.mode-btn{
+  width:36px;height:28px;border:none;border-radius:16px;background:transparent;color:var(--text-dim);
+  font-weight:700; font-size:12.5px; cursor:pointer;
+}
+.mode-btn.active{background:var(--accent); color:#031a0d;}
+.action-row{display:flex; gap:10px;}
+.action-btn{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; color:var(--text);
+  font-size:11.5px; font-weight:600; padding:9px 12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; min-width:64px;
+}
+.action-btn:active{background:rgba(255,255,255,0.18);}
+.action-btn.danger{border-color:rgba(255,77,79,0.5); color:#ffb3b3;}
+.action-btn.active-state{background:var(--accent); color:#031a0d;}
+
+/* takeoff confirm holds */
+.hold-btn{position:relative; overflow:hidden;}
+.hold-fill{position:absolute; left:0; top:0; bottom:0; width:0%; background:rgba(255,255,255,0.25); z-index:0;}
+.hold-btn span{position:relative; z-index:1;}
+
+#gimbalHint{
+  position:absolute; bottom:150px; right:16px; background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px; font-size:11px; color:var(--text-dim); max-width:150px; line-height:1.5;
+}
+
+#startOverlay{
+  position:absolute; inset:0; background:#05070a; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:16px; z-index:50; pointer-events:auto; text-align:center; padding:20px;
+}
+#startOverlay h1{font-size:22px; margin:0;}
+#startOverlay p{color:var(--text-dim); max-width:460px; font-size:13.5px; line-height:1.6; margin:0;}
+#startOverlay button{
+  background:var(--accent); border:none; color:#031a0d; font-weight:700; font-size:15px;
+  padding:12px 28px; border-radius:24px; cursor:pointer; margin-top:6px;
+}
+.token-warn{color:var(--accent-warn); font-size:12px; max-width:460px;}
+
+#aircraftSelect{width:100%; max-width:640px; margin-top:4px;}
+#aircraftSelect h3{font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; margin:0 0 10px; text-align:left;}
+#aircraftGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px;}
+.aircraft-card{
+  background:var(--panel-solid); border:1.5px solid var(--line); border-radius:12px; padding:12px;
+  text-align:left; cursor:pointer; transition:border-color .15s, background .15s;
+}
+.aircraft-card:hover{background:rgba(255,255,255,0.05);}
+.aircraft-card.selected{border-color:var(--accent); background:rgba(47,214,114,0.08);}
+.aircraft-card .ac-icon{font-size:26px; margin-bottom:4px;}
+.aircraft-card .ac-name{font-size:14px; font-weight:700;}
+.aircraft-card .ac-tag{font-size:11px; color:var(--text-dim); margin:2px 0 8px; line-height:1.4;}
+.aircraft-card .ac-specs{display:flex; gap:10px; font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
+.aircraft-card .ac-specs b{color:var(--text); font-weight:600;}
+#startBtn:disabled{opacity:0.4; cursor:not-allowed;}
+
+#aircraftBadge{display:flex; align-items:center; gap:6px; white-space:nowrap;}
+#aircraftBadge .ac-cam-res{font-size:10px; color:var(--text-dim);}
+@media (max-width:640px){
+  #aircraftBadge .ac-cam-res{display:none;}
+}
+
+@media (max-width:640px){
+  #rightPanel{top:100px;}
+  #telemetry{gap:10px; padding:6px 10px; bottom:170px;}
+  #minimap{bottom:170px; width:90px;height:90px;}
+  #gimbalHint{display:none;}
+  .joy-base{width:100px;height:100px;}
+}

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>DJI Fly Simülatör</title>
+
+<!-- Telefona "uygulama" gibi eklemek için (Paylaş > Ana Ekrana Ekle) -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#05070a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Drone Sim" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="icon" href="assets/icon-192.png" />
+
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="cesiumContainer"></div>
+
+<div id="hud">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="top-group">
+      <div class="safety-dot" id="safetyDot" title="Güvenlik durumu"></div>
+      <div class="pill" id="gpsPill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a7 7 0 0110 0M2 9a11 11 0 0116 0M8.5 16a3 3 0 015 0"/><circle cx="11" cy="20" r="1.3" fill="currentColor" stroke="none"/></svg>
+        <span id="gpsCount">18</span>
+      </div>
+      <div class="pill" id="sigPill">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="14" width="3" height="7"/><rect x="7" y="10" width="3" height="11"/><rect x="12" y="6" width="3" height="15"/><rect x="17" y="2" width="3" height="19"/></svg>
+        <span>O4</span>
+      </div>
+      <div class="pill" id="aircraftBadge"></div>
+      <div class="pill rc-badge" id="rcBadge" style="display:none;">🎮 RC-N3</div>
+      <div class="rec-indicator" id="recIndicator" style="display:none;">
+        <div class="rec-dot"></div>
+        <span id="recLabel">00:00</span>
+      </div>
+    </div>
+
+    <div class="top-group">
+      <div class="mode-badge N" id="modeBadge">N</div>
+      <div class="pill">
+        <div class="battery-bar"><div class="battery-fill" id="batteryFill" style="width:100%"></div></div>
+        <span id="batteryPct">100%</span>
+      </div>
+      <div class="icon-btn clickable" id="locBtn" title="Ünlü lokasyona uç">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </div>
+      <div class="icon-btn clickable" id="moreBtn" title="Diğer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCATIONS PANEL -->
+  <div id="locPanel" class="clickable">
+    <h3>Ünlü Lokasyona Uç</h3>
+    <div id="locList"></div>
+  </div>
+
+  <!-- SENSOR CLUSTER -->
+  <div id="sensorCluster">
+    <div class="sensor s-up" id="sen-up" title="Yukarı"></div>
+    <div class="sensor s-front" id="sen-front" title="Ön"></div>
+    <div class="sensor s-left" id="sen-left" title="Sol"></div>
+    <div class="sensor s-center"></div>
+    <div class="sensor s-right" id="sen-right" title="Sağ"></div>
+    <div class="sensor s-back" id="sen-back" title="Arka"></div>
+    <div class="sensor s-down" id="sen-down" title="Aşağı"></div>
+  </div>
+
+  <div id="warnings"></div>
+
+  <!-- RIGHT CAMERA PANEL -->
+  <div id="rightPanel">
+    <div class="cam-toggle" id="camToggle">
+      <button class="cam-toggle-btn active" data-cam="photo">FOTO</button>
+      <button class="cam-toggle-btn" data-cam="video">VİDEO</button>
+    </div>
+    <div style="height:1px;width:24px;background:var(--line);"></div>
+    <button class="zoom-badge" id="zoomBadge" title="Zoom seviyesini değiştir">1x</button>
+    <div style="height:1px;width:24px;background:var(--line);"></div>
+    <button class="shutter-btn" id="shutterBtn" title="Çek / Kayıt başlat-durdur"><div class="shutter-inner" id="shutterInner"></div></button>
+  </div>
+
+  <!-- Ekranı sürükleyerek gimbal açısını değiştir (gerçek DJI Fly'daki gibi) -->
+  <div id="gimbalReadout"></div>
+
+  <!-- MORE MENÜ -->
+  <div id="moreMenu">
+    <div class="menu-item" id="menuChangeAircraft">✈️ Uçak Değiştir</div>
+    <div class="menu-item" id="menuOpenSettings">⚙️ Ayarlar</div>
+    <div class="menu-item" id="menuToggleHint">💡 İpuçlarını Göster/Gizle</div>
+  </div>
+
+  <!-- AYARLAR (DJI Fly'daki gerçek sekme yapısı: Güvenlik/Kontrol/Kamera/İletim/Hakkında) -->
+  <div id="settingsPanel" class="clickable">
+    <div class="settings-header">
+      <h3>Ayarlar</h3>
+      <button id="settingsClose">✕</button>
+    </div>
+    <div class="settings-tabs" id="settingsTabs">
+      <button class="settings-tab active" data-tab="safety">Güvenlik</button>
+      <button class="settings-tab" data-tab="control">Kontrol</button>
+      <button class="settings-tab" data-tab="camera">Kamera</button>
+      <button class="settings-tab" data-tab="transmission">İletim</button>
+      <button class="settings-tab" data-tab="about">Hakkında</button>
+    </div>
+    <div class="settings-body" id="settingsBody"></div>
+  </div>
+
+  <!-- TELEMETRY (gerçek DJI Fly'daki gibi: ok ikonlu iki grup + süre) -->
+  <div id="telemetry">
+    <div class="tele-group">
+      <div class="tele-row"><span class="tele-arrow">↔</span><span id="tHS">0.0 m/s</span></div>
+      <div class="tele-row tele-sub">D <span id="tDist">0.0 m</span></div>
+    </div>
+    <div class="tele-div"></div>
+    <div class="tele-group">
+      <div class="tele-row"><span class="tele-arrow">↕</span><span id="tVS">0.0 m/s</span></div>
+      <div class="tele-row tele-sub">H <span id="tAlt">0.0 m</span></div>
+    </div>
+    <div class="tele-div"></div>
+    <div class="tele-group">
+      <div class="tele-row"><span id="tTime">00:00</span></div>
+      <div class="tele-row tele-sub">SÜRE</div>
+    </div>
+  </div>
+
+  <!-- MINIMAP -->
+  <div id="minimap">
+    <div class="ring" style="inset:8px;"></div>
+    <div class="ring" style="inset:24px;"></div>
+    <div class="center-dot"></div>
+    <div class="drone-dot" id="droneDot" style="left:50%;top:50%;"></div>
+  </div>
+
+  <div id="gimbalHint">Görüntü üzerinde yukarı/aşağı sürükleyerek gimbal açısını ayarla, zoom rozetine dokunarak zoom seviyesini değiştir. Konum menüsünden ünlü yerlere anında uç.</div>
+
+  <!-- BOTTOM CONTROL BAR -->
+  <div id="bottombar">
+    <div class="joy-wrap">
+      <div class="joy-base" id="leftBase"><div class="joy-stick" id="leftStick"></div></div>
+      <div class="joy-caption">GAZ / YAW</div>
+    </div>
+
+    <div id="midControls">
+      <div class="mode-switch" id="modeSwitch">
+        <button class="mode-btn" data-mode="C">C</button>
+        <button class="mode-btn active" data-mode="N">N</button>
+        <button class="mode-btn" data-mode="S">S</button>
+      </div>
+      <div class="action-row">
+        <button class="action-btn hold-btn" id="takeoffBtn"><div class="hold-fill" id="takeoffFill"></div><span id="takeoffLabel">🛫 KALKIŞ</span></button>
+        <button class="action-btn danger hold-btn" id="rthBtn"><div class="hold-fill" id="rthFill"></div><span>⌂ EVE DÖN</span></button>
+      </div>
+    </div>
+
+    <div class="joy-wrap">
+      <div class="joy-base" id="rightBase"><div class="joy-stick" id="rightStick"></div></div>
+      <div class="joy-caption">İLERİ-GERİ / YATAY</div>
+    </div>
+  </div>
+</div>
+
+<div id="startOverlay">
+  <h1>🚁 DJI Fly Tarzı Drone Simülatörü</h1>
+  <p>
+    Gerçek dünya 3D haritasında, DJI Fly arayüzüne benzer bir kontrol paneliyle drone uçur.
+    Ekrandaki çift joystick'i, klavyeni (W/A/S/D + Ok tuşları) ya da bağlı bir oyun kolunu kullanabilirsin.
+  </p>
+  <p class="token-warn" id="tokenWarn"></p>
+
+  <div id="aircraftSelect">
+    <h3>Uçak Seç</h3>
+    <div id="aircraftGrid"></div>
+  </div>
+
+  <button id="startBtn" disabled>Uçuşa Başla</button>
+</div>
+
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
