@@ -143,8 +143,22 @@ async function initCesium() {
     new Cesium.OpenStreetMapImageryProvider({ url: "https://tile.openstreetmap.org/" })
   );
 
+  // Token/hesap gerektirmeden gerçek uydu/hava fotoğrafına yükselt (Esri World Imagery, ücretsiz).
+  upgradeToSatelliteImagery(); // await ETMİYORUZ — arka planda, uçuşu bloklamadan yüklenir
+
   if (hasToken) {
     upgradeToPhotorealistic(); // await ETMİYORUZ — arka planda, uçuşu bloklamadan yüklenir
+  }
+}
+
+async function upgradeToSatelliteImagery() {
+  try {
+    const esriImagery = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+    );
+    viewer.imageryLayers.addImageryProvider(esriImagery);
+  } catch (e) {
+    console.warn("Esri uydu görüntüsü yüklenemedi, OSM ile devam:", e.message);
   }
 }
 
@@ -157,15 +171,11 @@ async function upgradeToPhotorealistic() {
     viewer.scene.globe.show = false; // 3D tiles zeminle birlikte geliyor, çift zemin gereksiz
     pushWarning("✅ Fotogerçekçi dünya hazır");
   } catch (e) {
-    console.warn("Fotogerçekçi 3D tiles yüklenemedi, standart görüntü/arazi kullanılıyor:", e.message);
+    console.warn("Fotogerçekçi 3D tiles yüklenemedi, uydu fotoğrafı + arazi yüksekliği kullanılıyor:", e.message);
     try {
-      const [imagery, terrain] = await Promise.all([
-        Cesium.createWorldImageryAsync(),
-        Cesium.createWorldTerrainAsync(),
-      ]);
-      viewer.imageryLayers.addImageryProvider(imagery);
+      const terrain = await Cesium.createWorldTerrainAsync();
       viewer.terrainProvider = terrain;
-    } catch (e2) { /* OSM ile devam */ }
+    } catch (e2) { /* Esri uydu görüntüsü + düz zeminle devam */ }
   }
 }
 
@@ -371,16 +381,50 @@ function setupMap() {
 
   $("mapExpandBtn").addEventListener("click", (e) => {
     e.stopPropagation();
-    mapExpanded = !mapExpanded;
-    $("minimap").classList.toggle("expanded", mapExpanded);
-    $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
-    leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
-    $("minimap").addEventListener(
-      "transitionend",
-      () => { leafletMap.invalidateSize(); if (!mapExpanded) recenterMap(); },
-      { once: true }
-    );
+    setMapExpanded(!mapExpanded);
   });
+
+  // Büyütülmüş haritada bir noktaya dokunarak drone'u oraya ışınla.
+  leafletMap.on("click", (e) => {
+    if (!mapExpanded) return;
+    teleportToLatLon(e.latlng.lat, e.latlng.lng);
+  });
+}
+
+function setMapExpanded(expanded) {
+  mapExpanded = expanded;
+  $("minimap").classList.toggle("expanded", mapExpanded);
+  $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+  leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
+  $("minimap").addEventListener(
+    "transitionend",
+    () => { leafletMap.invalidateSize(); if (!mapExpanded) recenterMap(); },
+    { once: true }
+  );
+}
+
+// Haritadan seçilen keyfi bir konuma ışınlan (gerçek arazi yüksekliği varsa terrain'den örneklenir).
+async function teleportToLatLon(lat, lon) {
+  pushWarning("📍 Seçilen konuma ışınlanılıyor…");
+  let homeAlt = 0;
+  try {
+    if (viewer.terrainProvider && !(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)) {
+      const [sampled] = await Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [
+        Cesium.Cartographic.fromDegrees(lon, lat),
+      ]);
+      if (Number.isFinite(sampled.height)) homeAlt = sampled.height;
+    }
+  } catch (e) { /* arazi verisi alınamadı, deniz seviyesi varsayılıyor */ }
+
+  teleportTo({
+    name: "Seçilen Konum",
+    country: "",
+    lat, lon,
+    homeAlt,
+    height: homeAlt + 300,
+    heading: 0,
+  });
+  setMapExpanded(false);
 }
 
 // Yeni bir konuma ışınlandığında (uçak değişimi/lokasyon seçimi) haritayı da oraya taşı.
