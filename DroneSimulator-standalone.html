@@ -40,9 +40,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- top bar ---------- */
 #topbar{
-  position:absolute; top:0; left:0; right:0; height:52px;
+  position:absolute; top:0; left:0; right:0; min-height:52px;
   display:flex; align-items:center; justify-content:space-between;
-  padding:0 14px; background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+  padding:env(safe-area-inset-top,0) calc(14px + env(safe-area-inset-right,0)) 0 calc(14px + env(safe-area-inset-left,0));
+  background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
 }
 .top-group{display:flex; align-items:center; gap:14px;}
 .pill{
@@ -114,7 +115,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- right camera panel ---------- */
 #rightPanel{
-  position:absolute; right:14px; top:64px; display:flex; flex-direction:column; align-items:center; gap:10px;
+  position:absolute; right:calc(14px + env(safe-area-inset-right,0)); top:64px; display:flex; flex-direction:column; align-items:center; gap:10px;
   background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 8px; pointer-events:auto;
 }
 .vslider{writing-mode:vertical-lr; direction:rtl; width:26px; height:78px; accent-color:var(--accent); cursor:pointer;}
@@ -217,7 +218,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- harita (Leaflet, gerçek OSM) ---------- */
 #minimap{
-  position:absolute; bottom:150px; left:16px; width:110px; height:110px; border-radius:50%;
+  position:absolute; bottom:150px; left:calc(16px + env(safe-area-inset-left,0)); width:110px; height:110px; border-radius:50%;
   border:2px solid var(--line); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
   background:#10201a;
 }
@@ -248,8 +249,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- bottom control bar ---------- */
 #bottombar{
-  position:absolute; bottom:0; left:0; right:0; height:150px;
-  display:flex; align-items:center; justify-content:space-between; padding:0 20px 14px;
+  position:absolute; bottom:0; left:0; right:0; min-height:150px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 calc(20px + env(safe-area-inset-right,0)) calc(14px + env(safe-area-inset-bottom,0)) calc(20px + env(safe-area-inset-left,0));
   pointer-events:none;
 }
 .joy-wrap{pointer-events:auto; display:flex; flex-direction:column; align-items:center; gap:4px;}
@@ -286,13 +288,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .hold-btn span{position:relative; z-index:1;}
 
 #gimbalHint{
-  position:absolute; bottom:150px; right:16px; background:var(--panel); border:1px solid var(--line);
+  position:absolute; bottom:150px; right:calc(16px + env(safe-area-inset-right,0)); background:var(--panel); border:1px solid var(--line);
   border-radius:10px; padding:8px 10px; font-size:11px; color:var(--text-dim); max-width:150px; line-height:1.5;
 }
 
 #startOverlay{
-  position:absolute; inset:0; background:#05070a; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:16px; z-index:50; pointer-events:auto; text-align:center; padding:20px;
+  position:absolute; inset:0; background:#05070a; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; justify-content:safe center;
+  gap:16px; z-index:50; pointer-events:auto; text-align:center;
+  padding:calc(20px + env(safe-area-inset-top,0)) calc(20px + env(safe-area-inset-right,0)) calc(20px + env(safe-area-inset-bottom,0)) calc(20px + env(safe-area-inset-left,0));
+  overflow-y:auto;
 }
 #startOverlay h1{font-size:22px; margin:0;}
 #startOverlay p{color:var(--text-dim); max-width:460px; font-size:13.5px; line-height:1.6; margin:0;}
@@ -330,6 +335,52 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   #minimap{bottom:170px; width:90px;height:90px;}
   #gimbalHint{display:none;}
   .joy-base{width:100px;height:100px;}
+}
+
+/* ---------- telefon yatay modu (oyun landscape'te oynanıyor, ama telefon yatayda
+   yüksekliği çok kısıtlı — asıl darlık genişlikte değil yükseklikte oluyor) ---------- */
+@media (max-height:500px) and (orientation:landscape){
+  #topbar{min-height:40px;}
+  .top-group{gap:8px;}
+  .pill{padding:3px 7px; font-size:10.5px; gap:4px;}
+  .mode-badge{width:20px;height:20px;font-size:11px;}
+  .icon-btn{width:26px;height:26px;}
+  #warnings{top:56px;}
+
+  #sensorCluster{top:42px; grid-template-columns:repeat(3,18px); grid-template-rows:repeat(3,18px); padding:4px; gap:2px;}
+
+  #rightPanel{top:46px; padding:6px; gap:6px;}
+  .zoom-badge{width:30px;height:30px;font-size:11px;}
+  .shutter-btn{width:38px;height:38px;}
+  .shutter-inner{width:28px;height:28px;}
+
+  #gimbalHint{display:none;}
+
+  #telemetry{bottom:100px; padding:5px 10px; gap:8px;}
+  .tele-row{font-size:12px;}
+  .tele-row.tele-sub{font-size:10px;}
+  .tele-div{height:20px;}
+
+  #minimap{bottom:100px; width:60px; height:60px;}
+  #minimap.expanded{bottom:40px;}
+
+  #bottombar{min-height:96px; padding-bottom:calc(6px + env(safe-area-inset-bottom,0));}
+  .joy-wrap{gap:2px;}
+  .joy-base{width:76px;height:76px;}
+  .joy-stick{width:30px;height:30px;margin:-15px;}
+  .joy-caption{display:none;}
+
+  #midControls{gap:4px;}
+  .mode-switch{padding:2px;}
+  .mode-btn{width:28px;height:20px;font-size:10.5px;}
+  .action-row{gap:6px;}
+  .action-btn{padding:5px 8px;font-size:10px;min-width:48px;gap:1px;}
+
+  #startOverlay{gap:8px; padding-top:calc(10px + env(safe-area-inset-top,0)); padding-bottom:calc(10px + env(safe-area-inset-bottom,0));}
+  #startOverlay h1{font-size:16px;}
+  #startOverlay p{font-size:11.5px; line-height:1.4;}
+  #aircraftGrid{gap:6px;}
+  .aircraft-card{padding:8px;}
 }
 
 </style>
