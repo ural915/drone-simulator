@@ -1,7 +1,12 @@
 // Uygulama kabuğunu (HTML/CSS/JS/ikonlar) önbelleğe alır ki APK/PWA olarak paketlendiğinde
 // internetsiz açılışta da beyaz ekran yerine arayüz görünsün. Cesium/harita gibi dış
 // kaynaklara (farklı origin) dokunmuyoruz — onlar zaten internet gerektiriyor.
-const CACHE_NAME = "drone-sim-shell-v1";
+//
+// ÖNEMLİ: "network-first" — önce ağdan taze sürümü çekmeyi dener, önbelleği o taze
+// içerikle günceller; sadece ağ başarısız olursa (internetsiz) önbelleğe düşer. Eski
+// "cache-first" strateji, internet varken bile eski dosyaları göstermeye devam
+// ediyordu (her deploy'dan sonra kullanıcılar güncellemeyi hiç görmüyordu).
+const CACHE_NAME = "drone-sim-shell-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -32,5 +37,13 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return; // CDN / harita karoları — dokunma
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
