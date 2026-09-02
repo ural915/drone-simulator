@@ -117,25 +117,31 @@ export const DRONE_MODELS = [
   },
 ];
 
+// Kamera başlangıç yüksekliği (height) her zaman homeAlt'ten en az CAMERA_CLEARANCE kadar
+// yüksek tutulur — yoksa gerçek arazi/3D bina verisi yüklenince kamera zeminin/tepenin
+// içinde kalıp "dünyanın çekirdeğinden kalkıyormuş" gibi kapkara bir görüntü verebiliyor.
+const CAMERA_CLEARANCE = 500;
+const withClearance = (height, homeAlt) => Math.max(height, homeAlt + CAMERA_CLEARANCE);
+
 export const FAMOUS_LOCATIONS = [
   // Türkiye
-  { name: "Kapadokya", country: "Türkiye", lat: 38.6431, lon: 34.8289, height: 1200, heading: 20, homeAlt: 1100 },
-  { name: "İstanbul Boğazı", country: "Türkiye", lat: 41.0431, lon: 29.0089, height: 150, heading: 30, homeAlt: 30 },
-  { name: "Pamukkale", country: "Türkiye", lat: 37.9142, lon: 29.1189, height: 500, heading: 0, homeAlt: 380 },
-  { name: "Nemrut Dağı", country: "Türkiye", lat: 37.9819, lon: 38.7414, height: 2400, heading: 0, homeAlt: 2200 },
-  { name: "Efes Antik Kenti", country: "Türkiye", lat: 37.9395, lon: 27.3417, height: 200, heading: 0, homeAlt: 80 },
-  { name: "Ayasofya - Sultanahmet", country: "Türkiye", lat: 41.0086, lon: 28.9802, height: 150, heading: 0, homeAlt: 40 },
-  { name: "Antalya Konyaaltı", country: "Türkiye", lat: 36.8628, lon: 30.6506, height: 200, heading: 90, homeAlt: 10 },
+  { name: "Kapadokya", country: "Türkiye", lat: 38.6431, lon: 34.8289, height: withClearance(1200, 1100), heading: 20, homeAlt: 1100 },
+  { name: "İstanbul Boğazı", country: "Türkiye", lat: 41.0431, lon: 29.0089, height: withClearance(150, 30), heading: 30, homeAlt: 30 },
+  { name: "Pamukkale", country: "Türkiye", lat: 37.9142, lon: 29.1189, height: withClearance(500, 380), heading: 0, homeAlt: 380 },
+  { name: "Nemrut Dağı", country: "Türkiye", lat: 37.9819, lon: 38.7414, height: withClearance(2400, 2200), heading: 0, homeAlt: 2200 },
+  { name: "Efes Antik Kenti", country: "Türkiye", lat: 37.9395, lon: 27.3417, height: withClearance(200, 80), heading: 0, homeAlt: 80 },
+  { name: "Ayasofya - Sultanahmet", country: "Türkiye", lat: 41.0086, lon: 28.9802, height: withClearance(150, 40), heading: 0, homeAlt: 40 },
+  { name: "Antalya Konyaaltı", country: "Türkiye", lat: 36.8628, lon: 30.6506, height: withClearance(200, 10), heading: 90, homeAlt: 10 },
   // Dünya
-  { name: "Eyfel Kulesi, Paris", country: "Fransa", lat: 48.8584, lon: 2.2945, height: 400, heading: 0, homeAlt: 35 },
-  { name: "Büyük Kanyon", country: "ABD", lat: 36.1069, lon: -112.1129, height: 2500, heading: 0, homeAlt: 2100 },
-  { name: "Özgürlük Anıtı, New York", country: "ABD", lat: 40.6892, lon: -74.0445, height: 250, heading: 0, homeAlt: 5 },
-  { name: "Dubai - Burj Khalifa", country: "BAE", lat: 25.1972, lon: 55.2744, height: 900, heading: 0, homeAlt: 10 },
-  { name: "Machu Picchu", country: "Peru", lat: -13.1631, lon: -72.5450, height: 2800, heading: 0, homeAlt: 2430 },
-  { name: "Büyük Set Resifi", country: "Avustralya", lat: -18.2871, lon: 147.6992, height: 300, heading: 0, homeAlt: 5 },
-  { name: "Matterhorn, İsviçre Alpleri", country: "İsviçre", lat: 45.9763, lon: 7.6586, height: 5000, heading: 0, homeAlt: 4478 },
-  { name: "Piramitler, Giza", country: "Mısır", lat: 29.9792, lon: 31.1342, height: 350, heading: 0, homeAlt: 60 },
-  { name: "Santorini", country: "Yunanistan", lat: 36.3932, lon: 25.4615, height: 300, heading: 0, homeAlt: 100 },
-  { name: "Uluru", country: "Avustralya", lat: -25.3444, lon: 131.0369, height: 900, heading: 0, homeAlt: 550 },
-  { name: "Fuji Dağı, Japonya", country: "Japonya", lat: 35.3606, lon: 138.7274, height: 4200, heading: 0, homeAlt: 3776 },
+  { name: "Eyfel Kulesi, Paris", country: "Fransa", lat: 48.8584, lon: 2.2945, height: withClearance(400, 35), heading: 0, homeAlt: 35 },
+  { name: "Büyük Kanyon", country: "ABD", lat: 36.1069, lon: -112.1129, height: withClearance(2500, 2100), heading: 0, homeAlt: 2100 },
+  { name: "Özgürlük Anıtı, New York", country: "ABD", lat: 40.6892, lon: -74.0445, height: withClearance(250, 5), heading: 0, homeAlt: 5 },
+  { name: "Dubai - Burj Khalifa", country: "BAE", lat: 25.1972, lon: 55.2744, height: withClearance(900, 10), heading: 0, homeAlt: 10 },
+  { name: "Machu Picchu", country: "Peru", lat: -13.1631, lon: -72.5450, height: withClearance(2800, 2430), heading: 0, homeAlt: 2430 },
+  { name: "Büyük Set Resifi", country: "Avustralya", lat: -18.2871, lon: 147.6992, height: withClearance(300, 5), heading: 0, homeAlt: 5 },
+  { name: "Matterhorn, İsviçre Alpleri", country: "İsviçre", lat: 45.9763, lon: 7.6586, height: withClearance(5000, 4478), heading: 0, homeAlt: 4478 },
+  { name: "Piramitler, Giza", country: "Mısır", lat: 29.9792, lon: 31.1342, height: withClearance(350, 60), heading: 0, homeAlt: 60 },
+  { name: "Santorini", country: "Yunanistan", lat: 36.3932, lon: 25.4615, height: withClearance(300, 100), heading: 0, homeAlt: 100 },
+  { name: "Uluru", country: "Avustralya", lat: -25.3444, lon: 131.0369, height: withClearance(900, 550), heading: 0, homeAlt: 550 },
+  { name: "Fuji Dağı, Japonya", country: "Japonya", lat: 35.3606, lon: 138.7274, height: withClearance(4200, 3776), heading: 0, homeAlt: 3776 },
 ];

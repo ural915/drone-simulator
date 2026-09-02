@@ -462,7 +462,7 @@ async function teleportToLatLon(lat, lon) {
     country: "",
     lat, lon,
     homeAlt,
-    height: homeAlt + 300,
+    height: homeAlt + 500,
     heading: 0,
   });
   setMapExpanded(false);
