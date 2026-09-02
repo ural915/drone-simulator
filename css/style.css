@@ -163,6 +163,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .set-btn{background:rgba(255,255,255,0.08); border:1px solid var(--line); color:var(--text); font-size:12px; font-weight:600; padding:7px 12px; border-radius:8px; cursor:pointer;}
 .set-btn.danger{color:#ffb3b3; border-color:rgba(255,77,79,0.4);}
 
+.ion-token-row{display:flex; gap:8px; padding:0 2px 12px; border-bottom:1px solid rgba(255,255,255,0.06);}
+.set-text-input{
+  flex:1; min-width:0; background:rgba(255,255,255,0.06); border:1px solid var(--line); border-radius:8px;
+  color:var(--text); font-size:12px; padding:7px 10px; font-family:'JetBrains Mono',monospace;
+}
+.set-text-input::placeholder{color:var(--text-dim); font-family:inherit;}
+
 .cam-toggle{display:flex;flex-direction:column;gap:4px;}
 .cam-toggle-btn{
   background:transparent;border:none;color:var(--text-dim);font-size:10px;font-weight:700;

@@ -181,6 +181,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .set-btn{background:rgba(255,255,255,0.08); border:1px solid var(--line); color:var(--text); font-size:12px; font-weight:600; padding:7px 12px; border-radius:8px; cursor:pointer;}
 .set-btn.danger{color:#ffb3b3; border-color:rgba(255,77,79,0.4);}
 
+.ion-token-row{display:flex; gap:8px; padding:0 2px 12px; border-bottom:1px solid rgba(255,255,255,0.06);}
+.set-text-input{
+  flex:1; min-width:0; background:rgba(255,255,255,0.06); border:1px solid var(--line); border-radius:8px;
+  color:var(--text); font-size:12px; padding:7px 10px; font-family:'JetBrains Mono',monospace;
+}
+.set-text-input::placeholder{color:var(--text-dim); font-family:inherit;}
+
 .cam-toggle{display:flex;flex-direction:column;gap:4px;}
 .cam-toggle-btn{
   background:transparent;border:none;color:var(--text-dim);font-size:10px;font-weight:700;
@@ -495,8 +502,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 <script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Cesium ion access token - cesium.com/ion adresinden ücretsiz alıp buraya yapıştır.
-const CESIUM_ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6InN2bFJqd2p4cWlFYVBvenIiLCJqdGkiOiI4NDcyMzg4MS0yOTk1LTQ0ODctOWM4NC0yZWQwYjBkNDQ0N2IiLCJpZCI6NDc4MjQ3LCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODgyODcyODB9.MpB5xYKuEVk2sGc1LIxarE8y71KbcLvoe6jFCPff9X8";
+// Cesium ion access token'ı buraya YAZMA — bu dosya public repoya gidiyor, herkes görür ve
+// token'ını çalıp kotanı/faturanı tüketebilir. Bunun yerine Ayarlar > Hakkında sekmesinden kendi
+// token'ını (cesium.com/ion adresinden ücretsiz alınır) yapıştır; sadece kendi tarayıcında
+// localStorage'da saklanır, repoya hiç gitmez. Token olmadan da uygulama gerçek uydu/hava
+// fotoğrafıyla (ücretsiz Esri World Imagery) çalışır — token yalnızca Google'ın fotogerçekçi
+// 3D bina modelleri için isteğe bağlıdır.
+const CESIUM_ION_TOKEN = "";
 
 // Google Photorealistic 3D Tiles - Cesium ion asset ID (hesabında "Google Photorealistic
 // 3D Tiles" varlığını eklemen gerekir: ion.cesium.com/assets -> Add -> Google Photorealistic 3D Tiles)
@@ -1097,6 +1109,20 @@ class Drone {
 
 const $ = (id) => document.getElementById(id);
 
+// Kullanıcının kendi Cesium ion token'ı yalnızca tarayıcısında (localStorage) saklanır,
+// repoya asla gitmez. Ayarlar > Hakkında sekmesinden girilir/silinir.
+const ION_TOKEN_STORAGE_KEY = "droneSimIonToken";
+function getIonToken() {
+  try {
+    const stored = localStorage.getItem(ION_TOKEN_STORAGE_KEY);
+    if (stored && stored.trim()) return stored.trim();
+  } catch (e) { /* localStorage kapalı olabilir (gizli sekme vb.), config.js'e düş */ }
+  return CESIUM_ION_TOKEN;
+}
+function hasStoredIonToken() {
+  try { return !!localStorage.getItem(ION_TOKEN_STORAGE_KEY); } catch (e) { return false; }
+}
+
 const AIRCRAFT_ICON = {
   mini4pro: "🚁", air3: "🛸", mavic3pro: "🛸", inspire3: "🎬", fpv: "🏎️", avata2: "🕶️",
 };
@@ -1207,7 +1233,8 @@ function teleportTo(loc) {
 }
 
 async function initCesium() {
-  const hasToken = CESIUM_ION_TOKEN && !CESIUM_ION_TOKEN.startsWith("PASTE_");
+  const ionToken = getIonToken();
+  const hasToken = !!ionToken;
   const viewerOptions = {
     animation: false, timeline: false, baseLayerPicker: false, geocoder: false,
     homeButton: false, sceneModePicker: false, navigationHelpButton: false,
@@ -1216,7 +1243,7 @@ async function initCesium() {
   };
 
   if (hasToken) {
-    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+    Cesium.Ion.defaultAccessToken = ionToken;
   }
   // Varsayılan ion tabanlı temel katman token'sız 401 verir; kendi katmanımızı elle ekleyeceğiz.
   viewerOptions.baseLayer = false;
@@ -1353,6 +1380,13 @@ function renderSettingsTab(tab) {
     html += row("DJI Fly Simülatör Sürümü", "", `<span class="set-val">1.0.0</span>`);
     html += row("RC Yazılımı", "", `<span class="set-val">v05.01.11.00</span>`);
     html += row("Fly Safe Veritabanı", "", `<span class="set-val">güncel</span>`);
+    html += `<div class="set-section">3D Dünya Verisi (opsiyonel)</div>`;
+    html += `<div class="set-sub" style="margin:2px 2px 8px;">Google'ın fotogerçekçi 3D bina modelleri için kendi ücretsiz Cesium ion token'ını (cesium.com/ion) gir. Sadece bu tarayıcında saklanır, repoya hiç gitmez. Boş bırakırsan uygulama zaten ücretsiz uydu/hava fotoğrafıyla (Esri) uçar. Kaydettikten/sildikten sonra sayfayı yenile.</div>`;
+    html += `<div class="ion-token-row">
+      <input type="password" id="ionTokenInput" class="set-text-input" placeholder="${hasStoredIonToken() ? "Kayıtlı token var — değiştirmek için yenisini yapıştır" : "Cesium ion token'ını yapıştır"}" autocomplete="off" />
+      <button class="set-btn" id="ionTokenSaveBtn">Kaydet</button>
+      ${hasStoredIonToken() ? `<button class="set-btn danger" id="ionTokenClearBtn">Sil</button>` : ""}
+    </div>`;
     html += `<div class="set-section">Sıfırlama</div>`;
     html += row("Tüm Ayarları Sıfırla", "", `<button class="set-btn danger" id="resetSettingsBtn">Sıfırla</button>`);
   }
@@ -1392,6 +1426,25 @@ function wireSettingsControls() {
   });
   const resetBtn = $("resetSettingsBtn");
   if (resetBtn) resetBtn.addEventListener("click", () => location.reload());
+
+  const ionSaveBtn = $("ionTokenSaveBtn");
+  if (ionSaveBtn) {
+    ionSaveBtn.addEventListener("click", () => {
+      const val = $("ionTokenInput").value.trim();
+      if (!val) return;
+      try { localStorage.setItem(ION_TOKEN_STORAGE_KEY, val); } catch (e) { /* localStorage kapalı olabilir */ }
+      pushWarning("✅ Token kaydedildi — etkin olması için sayfayı yenile");
+      renderSettingsTab("about");
+    });
+  }
+  const ionClearBtn = $("ionTokenClearBtn");
+  if (ionClearBtn) {
+    ionClearBtn.addEventListener("click", () => {
+      try { localStorage.removeItem(ION_TOKEN_STORAGE_KEY); } catch (e) { /* localStorage kapalı olabilir */ }
+      pushWarning("🗑️ Token silindi — etkin olması için sayfayı yenile");
+      renderSettingsTab("about");
+    });
+  }
 }
 
 function applySettings() {
@@ -1865,9 +1918,9 @@ async function boot() {
   mainLoop();
 }
 
-if (!CESIUM_ION_TOKEN || CESIUM_ION_TOKEN.startsWith("PASTE_")) {
+if (!getIonToken()) {
   $("tokenWarn").textContent =
-    "Uyarı: js/config.js içine kendi ücretsiz Cesium ion token'ını eklemedin — dünya haritası düşük kaliteli varsayılan görüntüyle yüklenecek.";
+    "Gerçek uydu/hava fotoğrafıyla uçmaya hazırsın. Google'ın fotogerçekçi 3D bina modelleri için Ayarlar > Hakkında'dan kendi ücretsiz Cesium ion token'ını ekleyebilirsin (opsiyonel).";
 }
 
 buildAircraftGrid();
