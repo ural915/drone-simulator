@@ -1936,5 +1936,11 @@ $("startBtn").addEventListener("click", async () => {
   }
 });
 </script>
+<script>
+  // APK/PWA olarak paketlendiğinde uygulama kabuğunu önbellekten anında açmak için.
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+</script>
 </body>
 </html>
