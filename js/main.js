@@ -381,16 +381,50 @@ function setupMap() {
 
   $("mapExpandBtn").addEventListener("click", (e) => {
     e.stopPropagation();
-    mapExpanded = !mapExpanded;
-    $("minimap").classList.toggle("expanded", mapExpanded);
-    $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
-    leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
-    $("minimap").addEventListener(
-      "transitionend",
-      () => { leafletMap.invalidateSize(); if (!mapExpanded) recenterMap(); },
-      { once: true }
-    );
+    setMapExpanded(!mapExpanded);
   });
+
+  // Büyütülmüş haritada bir noktaya dokunarak drone'u oraya ışınla.
+  leafletMap.on("click", (e) => {
+    if (!mapExpanded) return;
+    teleportToLatLon(e.latlng.lat, e.latlng.lng);
+  });
+}
+
+function setMapExpanded(expanded) {
+  mapExpanded = expanded;
+  $("minimap").classList.toggle("expanded", mapExpanded);
+  $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+  leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
+  $("minimap").addEventListener(
+    "transitionend",
+    () => { leafletMap.invalidateSize(); if (!mapExpanded) recenterMap(); },
+    { once: true }
+  );
+}
+
+// Haritadan seçilen keyfi bir konuma ışınlan (gerçek arazi yüksekliği varsa terrain'den örneklenir).
+async function teleportToLatLon(lat, lon) {
+  pushWarning("📍 Seçilen konuma ışınlanılıyor…");
+  let homeAlt = 0;
+  try {
+    if (viewer.terrainProvider && !(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)) {
+      const [sampled] = await Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [
+        Cesium.Cartographic.fromDegrees(lon, lat),
+      ]);
+      if (Number.isFinite(sampled.height)) homeAlt = sampled.height;
+    }
+  } catch (e) { /* arazi verisi alınamadı, deniz seviyesi varsayılıyor */ }
+
+  teleportTo({
+    name: "Seçilen Konum",
+    country: "",
+    lat, lon,
+    homeAlt,
+    height: homeAlt + 300,
+    heading: 0,
+  });
+  setMapExpanded(false);
 }
 
 // Yeni bir konuma ışınlandığında (uçak değişimi/lokasyon seçimi) haritayı da oraya taşı.
