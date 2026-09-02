@@ -106,13 +106,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .loc-item b{font-size:13.5px;}
 .loc-item span{font-size:11.5px;color:var(--text-dim);}
 
-/* ---------- sensors ---------- */
+/* ---------- sensors (DJI Fly'daki gibi: sadece bir engel algılanınca görünür,
+   normalde video görüntüsünü kapatan bir kutu yok) ---------- */
 #sensorCluster{
   position:absolute; top:58px; left:50%; transform:translateX(-50%);
   display:grid; grid-template-columns:repeat(3,24px); grid-template-rows:repeat(3,24px); gap:3px;
-  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px;
+  padding:6px; pointer-events:none;
 }
-.sensor{border-radius:4px; background:rgba(255,255,255,0.08);}
+.sensor{border-radius:4px; background:transparent;}
 .sensor.ok{background:var(--accent);}
 .sensor.warn{background:var(--accent-warn);}
 .sensor.danger{background:var(--accent-danger);}
