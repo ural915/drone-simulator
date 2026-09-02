@@ -135,7 +135,15 @@
   <!-- HARİTA (gerçek OpenStreetMap üzerinde drone'un canlı konumu — DJI Fly'daki Harita/FPV anahtarı gibi) -->
   <div id="minimap" class="clickable">
     <div id="mapCanvas"></div>
-    <button id="mapExpandBtn" title="Haritayı büyüt/küçült">⤢</button>
+    <!-- DJI Fly'daki gibi: küçük haritayı kapatınca pusula halkası görünür -->
+    <div id="compassRing">
+      <span class="compass-tick n">N</span>
+      <span class="compass-tick e">E</span>
+      <span class="compass-tick s">S</span>
+      <span class="compass-tick w">W</span>
+    </div>
+    <div id="compassArrow"></div>
+    <button id="mapExpandBtn" title="Haritayı büyüt/küçült">🗺</button>
     <div id="mapPickHint">📍 Işınlanmak için haritaya dokun</div>
   </div>
 

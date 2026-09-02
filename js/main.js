@@ -435,7 +435,7 @@ function setupMap() {
 function setMapExpanded(expanded) {
   mapExpanded = expanded;
   $("minimap").classList.toggle("expanded", mapExpanded);
-  $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+  $("mapExpandBtn").textContent = mapExpanded ? "✕" : "🗺";
   leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
   $("minimap").addEventListener(
     "transitionend",
@@ -697,9 +697,12 @@ function droneLatLon() {
 function updateMap() {
   if (!leafletMap) return;
   const [lat, lon] = droneLatLon();
+  const headingDeg = Cesium.Math.toDegrees(drone.heading);
   droneMarker.setLatLng([lat, lon]);
   const el = droneMarker.getElement()?.querySelector(".drone-marker");
-  if (el) el.style.transform = `rotate(${Cesium.Math.toDegrees(drone.heading)}deg)`;
+  if (el) el.style.transform = `rotate(${headingDeg}deg)`;
+  // Pusula halkası ok'a göre sabit kalır, halka ters yönde döner (N hep gerçek kuzeyi gösterir).
+  $("compassRing").style.transform = `rotate(${-headingDeg}deg)`;
   if (!mapExpanded) {
     leafletMap.setView([lat, lon], leafletMap.getZoom(), { animate: false });
   }

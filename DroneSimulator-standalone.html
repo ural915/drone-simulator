@@ -228,8 +228,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 }
 #mapCanvas{position:absolute; inset:0;}
 #mapExpandBtn{
-  position:absolute; top:6px; right:6px; z-index:1000; width:26px; height:26px; border-radius:6px;
-  background:rgba(15,18,22,0.85); border:1px solid var(--line); color:var(--text); font-size:13px; cursor:pointer;
+  position:absolute; bottom:6px; right:6px; z-index:1000; width:24px; height:24px; border-radius:6px;
+  background:rgba(15,18,22,0.9); border:1px solid var(--line); color:var(--text); font-size:12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; padding:0;
 }
 #mapPickHint{
   display:none; position:absolute; bottom:8px; left:50%; transform:translateX(-50%); z-index:1000;
@@ -242,6 +243,29 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   border-bottom:14px solid var(--accent); transform-origin:50% 70%; filter:drop-shadow(0 0 3px rgba(0,0,0,0.6));
 }
 .home-marker{width:12px;height:12px;border-radius:50%;background:var(--accent-danger);border:2px solid #fff;}
+
+/* DJI Fly'daki gibi: küçük haritanın üstünde dönen pusula halkası (N gerçek kuzeyi
+   gösterir, ortadaki ok sabit — drone'un burnunu/yönünü temsil eder). */
+#compassRing{
+  position:absolute; inset:6px; border-radius:50%; pointer-events:none; z-index:5;
+  border:1px solid rgba(255,255,255,0.18);
+  transition:transform .1s linear;
+}
+.compass-tick{
+  position:absolute; left:50%; top:50%; font-size:10px; font-weight:700; color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,0.85); line-height:1;
+}
+.compass-tick.n{ transform:translate(-50%,-50%) translateY(-42px); color:#ffcf4d; }
+.compass-tick.e{ transform:translate(-50%,-50%) translateX(42px); }
+.compass-tick.s{ transform:translate(-50%,-50%) translateY(42px); }
+.compass-tick.w{ transform:translate(-50%,-50%) translateX(-42px); }
+#compassArrow{
+  position:absolute; left:50%; top:50%; z-index:6; pointer-events:none;
+  margin-left:-6px; margin-top:-24px; width:0; height:0;
+  border-left:6px solid transparent; border-right:6px solid transparent;
+  border-bottom:22px solid #fff; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+}
+#minimap.expanded #compassRing, #minimap.expanded #compassArrow{display:none;}
 
 /* ---------- warnings ---------- */
 #warnings{position:absolute; top:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center;}
@@ -363,6 +387,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
   #minimap{bottom:100px; width:60px; height:60px;}
   #minimap.expanded{bottom:40px;}
+  .compass-tick{font-size:8px;}
+  .compass-tick.n{transform:translate(-50%,-50%) translateY(-22px);}
+  .compass-tick.e{transform:translate(-50%,-50%) translateX(22px);}
+  .compass-tick.s{transform:translate(-50%,-50%) translateY(22px);}
+  .compass-tick.w{transform:translate(-50%,-50%) translateX(-22px);}
+  #compassArrow{margin-left:-4px; margin-top:-13px; border-left-width:4px; border-right-width:4px; border-bottom-width:12px;}
+  #mapExpandBtn{width:20px;height:20px;font-size:10px;}
 
   #bottombar{min-height:96px; padding-bottom:calc(6px + env(safe-area-inset-bottom,0));}
   .joy-wrap{gap:2px;}
@@ -502,7 +533,15 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   <!-- HARİTA (gerçek OpenStreetMap üzerinde drone'un canlı konumu — DJI Fly'daki Harita/FPV anahtarı gibi) -->
   <div id="minimap" class="clickable">
     <div id="mapCanvas"></div>
-    <button id="mapExpandBtn" title="Haritayı büyüt/küçült">⤢</button>
+    <!-- DJI Fly'daki gibi: küçük haritayı kapatınca pusula halkası görünür -->
+    <div id="compassRing">
+      <span class="compass-tick n">N</span>
+      <span class="compass-tick e">E</span>
+      <span class="compass-tick s">S</span>
+      <span class="compass-tick w">W</span>
+    </div>
+    <div id="compassArrow"></div>
+    <button id="mapExpandBtn" title="Haritayı büyüt/küçült">🗺</button>
     <div id="mapPickHint">📍 Işınlanmak için haritaya dokun</div>
   </div>
 
@@ -1590,7 +1629,7 @@ function setupMap() {
 function setMapExpanded(expanded) {
   mapExpanded = expanded;
   $("minimap").classList.toggle("expanded", mapExpanded);
-  $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+  $("mapExpandBtn").textContent = mapExpanded ? "✕" : "🗺";
   leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
   $("minimap").addEventListener(
     "transitionend",
@@ -1852,9 +1891,12 @@ function droneLatLon() {
 function updateMap() {
   if (!leafletMap) return;
   const [lat, lon] = droneLatLon();
+  const headingDeg = Cesium.Math.toDegrees(drone.heading);
   droneMarker.setLatLng([lat, lon]);
   const el = droneMarker.getElement()?.querySelector(".drone-marker");
-  if (el) el.style.transform = `rotate(${Cesium.Math.toDegrees(drone.heading)}deg)`;
+  if (el) el.style.transform = `rotate(${headingDeg}deg)`;
+  // Pusula halkası ok'a göre sabit kalır, halka ters yönde döner (N hep gerçek kuzeyi gösterir).
+  $("compassRing").style.transform = `rotate(${-headingDeg}deg)`;
   if (!mapExpanded) {
     leafletMap.setView([lat, lon], leafletMap.getZoom(), { animate: false });
   }
