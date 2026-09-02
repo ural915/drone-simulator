@@ -573,6 +573,10 @@ function setupActions() {
     if (camMode === "photo") takePhoto();
     else toggleRecording();
   });
+
+  $("galleryBtn").addEventListener("click", () => {
+    pushWarning("📷 Çektiğin foto/videolar tarayıcının indirilenler klasörüne kaydediliyor");
+  });
 }
 
 function takePhoto() {

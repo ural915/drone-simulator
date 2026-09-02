@@ -46,13 +46,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
 }
 .top-group{display:flex; align-items:center; gap:14px;}
+/* DJI Fly'daki gibi düz, kutu/arka plan olmadan video üzerinde duran ikon+metin */
 .pill{
-  display:flex; align-items:center; gap:6px;
-  background:var(--panel); border:1px solid var(--line); border-radius:20px;
-  padding:5px 10px; font-size:12px; font-weight:600; color:var(--text);
-  backdrop-filter:blur(6px);
+  display:flex; align-items:center; gap:5px;
+  font-size:12px; font-weight:600; color:var(--text);
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
 }
-.pill svg{width:14px;height:14px;flex:none;}
+.pill svg{width:15px;height:15px;flex:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));}
+.icon-plain{
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--text);
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+.icon-plain svg{width:20px;height:20px;}
 .mode-badge{
   width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
   font-weight:700; font-size:13px; background:var(--accent); color:#031a0d;
@@ -77,7 +82,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .rec-dot{width:9px;height:9px;border-radius:50%;background:var(--accent-danger);animation:blink 1s infinite;}
 @keyframes blink{50%{opacity:0.2;}}
 
-.rc-badge{background:rgba(47,214,114,0.16); border-color:rgba(47,214,114,0.4); color:var(--accent);}
+.rc-badge{
+  background:rgba(47,214,114,0.16); border:1px solid rgba(47,214,114,0.4); color:var(--accent);
+  border-radius:20px; padding:5px 10px; text-shadow:none;
+}
 
 .safety-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex:none;}
 .safety-dot.warn{background:var(--accent-warn);box-shadow:0 0 6px var(--accent-warn);}
@@ -113,10 +121,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .s-center{grid-column:2;grid-row:2;background:transparent;} .s-right{grid-column:3;grid-row:2;}
 .s-back{grid-column:2;grid-row:3;} .s-up{grid-column:1;grid-row:1;} .s-down{grid-column:3;grid-row:3;}
 
-/* ---------- right camera panel ---------- */
+/* ---------- right camera panel (DJI Fly'daki gibi: video üzerinde düz ikon şeridi, kutu yok) ---------- */
 #rightPanel{
-  position:absolute; right:calc(14px + env(safe-area-inset-right,0)); top:64px; display:flex; flex-direction:column; align-items:center; gap:10px;
-  background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 8px; pointer-events:auto;
+  position:absolute; right:calc(14px + env(safe-area-inset-right,0)); top:64px; display:flex; flex-direction:column; align-items:center; gap:12px;
+  padding:6px; pointer-events:auto;
 }
 .vslider{writing-mode:vertical-lr; direction:rtl; width:26px; height:78px; accent-color:var(--accent); cursor:pointer;}
 .panel-label{font-size:10px;color:var(--text-dim);text-align:center;font-weight:600;}
@@ -197,12 +205,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .cam-toggle-btn.active{background:var(--panel-solid);color:var(--text);}
 
 .shutter-btn{
-  width:50px;height:50px;border-radius:50%;background:transparent;border:3px solid var(--text);
+  width:48px;height:48px;border-radius:50%;background:transparent;border:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
 }
-.shutter-inner{width:38px;height:38px;border-radius:50%;background:var(--text);transition:all .15s;}
+.shutter-inner{width:48px;height:48px;border-radius:50%;background:#d6dade;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
 .shutter-btn.video-mode .shutter-inner{background:var(--accent-danger);}
-.shutter-btn.recording .shutter-inner{border-radius:6px;width:22px;height:22px;background:var(--accent-danger);}
+.shutter-btn.recording .shutter-inner{border-radius:8px;width:26px;height:26px;background:var(--accent-danger);}
+
+.icon-plain-btn{
+  background:none;border:none;color:var(--text);width:26px;height:26px;cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+.icon-plain-btn svg{width:22px;height:22px;}
 
 /* ---------- telemetry bottom-center (gerçek DJI Fly stili: ok + değer / etiket + değer) ---------- */
 #telemetry{
@@ -219,8 +233,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 /* ---------- harita (Leaflet, gerçek OSM) ---------- */
 #minimap{
   position:absolute; bottom:150px; left:calc(16px + env(safe-area-inset-left,0)); width:110px; height:110px; border-radius:50%;
-  border:2px solid var(--line); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
-  background:#10201a;
+  border:1px solid rgba(255,255,255,0.22); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
+  background:rgba(10,12,14,0.92);
 }
 #minimap.expanded{
   width:min(520px, 88vw); height:min(420px, 60vh); border-radius:14px; bottom:56px; left:50%; transform:translateX(-50%);
@@ -251,11 +265,19 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   border:1px solid rgba(255,255,255,0.18);
   transition:transform .1s linear;
 }
+/* radar tarzı noktalı iç halka (DJI Fly'daki gibi) */
+#compassRing::before{
+  content:""; position:absolute; inset:14px; border-radius:50%;
+  border:1px dashed rgba(255,255,255,0.25);
+}
 .compass-tick{
   position:absolute; left:50%; top:50%; font-size:10px; font-weight:700; color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,0.85); line-height:1;
 }
-.compass-tick.n{ transform:translate(-50%,-50%) translateY(-42px); color:#ffcf4d; }
+.compass-tick.n{
+  transform:translate(-50%,-50%) translateY(-42px); color:#fff;
+  background:#ffcf4d; color:#221a00; padding:1px 4px; border-radius:3px;
+}
 .compass-tick.e{ transform:translate(-50%,-50%) translateX(42px); }
 .compass-tick.s{ transform:translate(-50%,-50%) translateY(42px); }
 .compass-tick.w{ transform:translate(-50%,-50%) translateX(-42px); }
@@ -369,14 +391,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   .pill{padding:3px 7px; font-size:10.5px; gap:4px;}
   .mode-badge{width:20px;height:20px;font-size:11px;}
   .icon-btn{width:26px;height:26px;}
+  .icon-plain{width:18px;height:18px;}
+  .icon-plain svg{width:16px;height:16px;}
   #warnings{top:56px;}
 
   #sensorCluster{top:42px; grid-template-columns:repeat(3,18px); grid-template-rows:repeat(3,18px); padding:4px; gap:2px;}
 
-  #rightPanel{top:46px; padding:6px; gap:6px;}
+  #rightPanel{top:46px; padding:6px; gap:8px;}
   .zoom-badge{width:30px;height:30px;font-size:11px;}
   .shutter-btn{width:38px;height:38px;}
-  .shutter-inner{width:28px;height:28px;}
+  .shutter-inner{width:38px;height:38px;}
+  .icon-plain-btn{width:20px;height:20px;}
+  .icon-plain-btn svg{width:18px;height:18px;}
 
   #gimbalHint{display:none;}
 
@@ -423,6 +449,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   <!-- TOP BAR -->
   <div id="topbar">
     <div class="top-group">
+      <div class="icon-plain" id="homeIcon" title="Eve mesafe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+      </div>
       <div class="safety-dot" id="safetyDot" title="Güvenlik durumu"></div>
       <div class="pill" id="gpsPill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a7 7 0 0110 0M2 9a11 11 0 0116 0M8.5 16a3 3 0 015 0"/><circle cx="11" cy="20" r="1.3" fill="currentColor" stroke="none"/></svg>
@@ -484,6 +513,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
     <button class="zoom-badge" id="zoomBadge" title="Zoom seviyesini değiştir">1x</button>
     <div style="height:1px;width:24px;background:var(--line);"></div>
     <button class="shutter-btn" id="shutterBtn" title="Çek / Kayıt başlat-durdur"><div class="shutter-inner" id="shutterInner"></div></button>
+    <div style="height:1px;width:24px;background:var(--line);"></div>
+    <button class="icon-plain-btn" id="galleryBtn" title="Galeri">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    </button>
   </div>
 
   <!-- Ekranı sürükleyerek gimbal açısını değiştir (gerçek DJI Fly'daki gibi) -->
@@ -1766,6 +1799,10 @@ function setupActions() {
   $("shutterBtn").addEventListener("click", () => {
     if (camMode === "photo") takePhoto();
     else toggleRecording();
+  });
+
+  $("galleryBtn").addEventListener("click", () => {
+    pushWarning("📷 Çektiğin foto/videolar tarayıcının indirilenler klasörüne kaydediliyor");
   });
 }
 
