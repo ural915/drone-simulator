@@ -5,6 +5,20 @@ import { Drone } from "./drone.js";
 
 const $ = (id) => document.getElementById(id);
 
+// Kullanıcının kendi Cesium ion token'ı yalnızca tarayıcısında (localStorage) saklanır,
+// repoya asla gitmez. Ayarlar > Hakkında sekmesinden girilir/silinir.
+const ION_TOKEN_STORAGE_KEY = "droneSimIonToken";
+function getIonToken() {
+  try {
+    const stored = localStorage.getItem(ION_TOKEN_STORAGE_KEY);
+    if (stored && stored.trim()) return stored.trim();
+  } catch (e) { /* localStorage kapalı olabilir (gizli sekme vb.), config.js'e düş */ }
+  return CESIUM_ION_TOKEN;
+}
+function hasStoredIonToken() {
+  try { return !!localStorage.getItem(ION_TOKEN_STORAGE_KEY); } catch (e) { return false; }
+}
+
 const AIRCRAFT_ICON = {
   mini4pro: "🚁", air3: "🛸", mavic3pro: "🛸", inspire3: "🎬", fpv: "🏎️", avata2: "🕶️",
 };
@@ -115,7 +129,8 @@ function teleportTo(loc) {
 }
 
 async function initCesium() {
-  const hasToken = CESIUM_ION_TOKEN && !CESIUM_ION_TOKEN.startsWith("PASTE_");
+  const ionToken = getIonToken();
+  const hasToken = !!ionToken;
   const viewerOptions = {
     animation: false, timeline: false, baseLayerPicker: false, geocoder: false,
     homeButton: false, sceneModePicker: false, navigationHelpButton: false,
@@ -124,7 +139,7 @@ async function initCesium() {
   };
 
   if (hasToken) {
-    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+    Cesium.Ion.defaultAccessToken = ionToken;
   }
   // Varsayılan ion tabanlı temel katman token'sız 401 verir; kendi katmanımızı elle ekleyeceğiz.
   viewerOptions.baseLayer = false;
@@ -261,6 +276,13 @@ function renderSettingsTab(tab) {
     html += row("DJI Fly Simülatör Sürümü", "", `<span class="set-val">1.0.0</span>`);
     html += row("RC Yazılımı", "", `<span class="set-val">v05.01.11.00</span>`);
     html += row("Fly Safe Veritabanı", "", `<span class="set-val">güncel</span>`);
+    html += `<div class="set-section">3D Dünya Verisi (opsiyonel)</div>`;
+    html += `<div class="set-sub" style="margin:2px 2px 8px;">Google'ın fotogerçekçi 3D bina modelleri için kendi ücretsiz Cesium ion token'ını (cesium.com/ion) gir. Sadece bu tarayıcında saklanır, repoya hiç gitmez. Boş bırakırsan uygulama zaten ücretsiz uydu/hava fotoğrafıyla (Esri) uçar. Kaydettikten/sildikten sonra sayfayı yenile.</div>`;
+    html += `<div class="ion-token-row">
+      <input type="password" id="ionTokenInput" class="set-text-input" placeholder="${hasStoredIonToken() ? "Kayıtlı token var — değiştirmek için yenisini yapıştır" : "Cesium ion token'ını yapıştır"}" autocomplete="off" />
+      <button class="set-btn" id="ionTokenSaveBtn">Kaydet</button>
+      ${hasStoredIonToken() ? `<button class="set-btn danger" id="ionTokenClearBtn">Sil</button>` : ""}
+    </div>`;
     html += `<div class="set-section">Sıfırlama</div>`;
     html += row("Tüm Ayarları Sıfırla", "", `<button class="set-btn danger" id="resetSettingsBtn">Sıfırla</button>`);
   }
@@ -300,6 +322,25 @@ function wireSettingsControls() {
   });
   const resetBtn = $("resetSettingsBtn");
   if (resetBtn) resetBtn.addEventListener("click", () => location.reload());
+
+  const ionSaveBtn = $("ionTokenSaveBtn");
+  if (ionSaveBtn) {
+    ionSaveBtn.addEventListener("click", () => {
+      const val = $("ionTokenInput").value.trim();
+      if (!val) return;
+      try { localStorage.setItem(ION_TOKEN_STORAGE_KEY, val); } catch (e) { /* localStorage kapalı olabilir */ }
+      pushWarning("✅ Token kaydedildi — etkin olması için sayfayı yenile");
+      renderSettingsTab("about");
+    });
+  }
+  const ionClearBtn = $("ionTokenClearBtn");
+  if (ionClearBtn) {
+    ionClearBtn.addEventListener("click", () => {
+      try { localStorage.removeItem(ION_TOKEN_STORAGE_KEY); } catch (e) { /* localStorage kapalı olabilir */ }
+      pushWarning("🗑️ Token silindi — etkin olması için sayfayı yenile");
+      renderSettingsTab("about");
+    });
+  }
 }
 
 function applySettings() {
@@ -394,7 +435,7 @@ function setupMap() {
 function setMapExpanded(expanded) {
   mapExpanded = expanded;
   $("minimap").classList.toggle("expanded", mapExpanded);
-  $("mapExpandBtn").textContent = mapExpanded ? "⤡" : "⤢";
+  $("mapExpandBtn").textContent = mapExpanded ? "✕" : "🗺";
   leafletMap.invalidateSize(); // anlık (geçiş başlamadan önceki boyut için)
   $("minimap").addEventListener(
     "transitionend",
@@ -421,7 +462,7 @@ async function teleportToLatLon(lat, lon) {
     country: "",
     lat, lon,
     homeAlt,
-    height: homeAlt + 300,
+    height: homeAlt + 500,
     heading: 0,
   });
   setMapExpanded(false);
@@ -531,6 +572,10 @@ function setupActions() {
   $("shutterBtn").addEventListener("click", () => {
     if (camMode === "photo") takePhoto();
     else toggleRecording();
+  });
+
+  $("galleryBtn").addEventListener("click", () => {
+    pushWarning("📷 Çektiğin foto/videolar tarayıcının indirilenler klasörüne kaydediliyor");
   });
 }
 
@@ -656,9 +701,12 @@ function droneLatLon() {
 function updateMap() {
   if (!leafletMap) return;
   const [lat, lon] = droneLatLon();
+  const headingDeg = Cesium.Math.toDegrees(drone.heading);
   droneMarker.setLatLng([lat, lon]);
   const el = droneMarker.getElement()?.querySelector(".drone-marker");
-  if (el) el.style.transform = `rotate(${Cesium.Math.toDegrees(drone.heading)}deg)`;
+  if (el) el.style.transform = `rotate(${headingDeg}deg)`;
+  // Pusula halkası ok'a göre sabit kalır, halka ters yönde döner (N hep gerçek kuzeyi gösterir).
+  $("compassRing").style.transform = `rotate(${-headingDeg}deg)`;
   if (!mapExpanded) {
     leafletMap.setView([lat, lon], leafletMap.getZoom(), { animate: false });
   }
@@ -773,9 +821,9 @@ async function boot() {
   mainLoop();
 }
 
-if (!CESIUM_ION_TOKEN || CESIUM_ION_TOKEN.startsWith("PASTE_")) {
+if (!getIonToken()) {
   $("tokenWarn").textContent =
-    "Uyarı: js/config.js içine kendi ücretsiz Cesium ion token'ını eklemedin — dünya haritası düşük kaliteli varsayılan görüntüyle yüklenecek.";
+    "Gerçek uydu/hava fotoğrafıyla uçmaya hazırsın. Google'ın fotogerçekçi 3D bina modelleri için Ayarlar > Hakkında'dan kendi ücretsiz Cesium ion token'ını ekleyebilirsin (opsiyonel).";
 }
 
 buildAircraftGrid();

@@ -22,18 +22,24 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- top bar ---------- */
 #topbar{
-  position:absolute; top:0; left:0; right:0; height:52px;
+  position:absolute; top:0; left:0; right:0; min-height:52px;
   display:flex; align-items:center; justify-content:space-between;
-  padding:0 14px; background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+  padding:env(safe-area-inset-top,0) calc(14px + env(safe-area-inset-right,0)) 0 calc(14px + env(safe-area-inset-left,0));
+  background:linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
 }
 .top-group{display:flex; align-items:center; gap:14px;}
+/* DJI Fly'daki gibi düz, kutu/arka plan olmadan video üzerinde duran ikon+metin */
 .pill{
-  display:flex; align-items:center; gap:6px;
-  background:var(--panel); border:1px solid var(--line); border-radius:20px;
-  padding:5px 10px; font-size:12px; font-weight:600; color:var(--text);
-  backdrop-filter:blur(6px);
+  display:flex; align-items:center; gap:5px;
+  font-size:12px; font-weight:600; color:var(--text);
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
 }
-.pill svg{width:14px;height:14px;flex:none;}
+.pill svg{width:15px;height:15px;flex:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));}
+.icon-plain{
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--text);
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+.icon-plain svg{width:20px;height:20px;}
 .mode-badge{
   width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
   font-weight:700; font-size:13px; background:var(--accent); color:#031a0d;
@@ -58,7 +64,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .rec-dot{width:9px;height:9px;border-radius:50%;background:var(--accent-danger);animation:blink 1s infinite;}
 @keyframes blink{50%{opacity:0.2;}}
 
-.rc-badge{background:rgba(47,214,114,0.16); border-color:rgba(47,214,114,0.4); color:var(--accent);}
+.rc-badge{
+  background:rgba(47,214,114,0.16); border:1px solid rgba(47,214,114,0.4); color:var(--accent);
+  border-radius:20px; padding:5px 10px; text-shadow:none;
+}
 
 .safety-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex:none;}
 .safety-dot.warn{background:var(--accent-warn);box-shadow:0 0 6px var(--accent-warn);}
@@ -94,10 +103,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .s-center{grid-column:2;grid-row:2;background:transparent;} .s-right{grid-column:3;grid-row:2;}
 .s-back{grid-column:2;grid-row:3;} .s-up{grid-column:1;grid-row:1;} .s-down{grid-column:3;grid-row:3;}
 
-/* ---------- right camera panel ---------- */
+/* ---------- right camera panel (DJI Fly'daki gibi: video üzerinde düz ikon şeridi, kutu yok) ---------- */
 #rightPanel{
-  position:absolute; right:14px; top:64px; display:flex; flex-direction:column; align-items:center; gap:10px;
-  background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 8px; pointer-events:auto;
+  position:absolute; right:calc(14px + env(safe-area-inset-right,0)); top:64px; display:flex; flex-direction:column; align-items:center; gap:12px;
+  padding:6px; pointer-events:auto;
 }
 .vslider{writing-mode:vertical-lr; direction:rtl; width:26px; height:78px; accent-color:var(--accent); cursor:pointer;}
 .panel-label{font-size:10px;color:var(--text-dim);text-align:center;font-weight:600;}
@@ -163,6 +172,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .set-btn{background:rgba(255,255,255,0.08); border:1px solid var(--line); color:var(--text); font-size:12px; font-weight:600; padding:7px 12px; border-radius:8px; cursor:pointer;}
 .set-btn.danger{color:#ffb3b3; border-color:rgba(255,77,79,0.4);}
 
+.ion-token-row{display:flex; gap:8px; padding:0 2px 12px; border-bottom:1px solid rgba(255,255,255,0.06);}
+.set-text-input{
+  flex:1; min-width:0; background:rgba(255,255,255,0.06); border:1px solid var(--line); border-radius:8px;
+  color:var(--text); font-size:12px; padding:7px 10px; font-family:'JetBrains Mono',monospace;
+}
+.set-text-input::placeholder{color:var(--text-dim); font-family:inherit;}
+
 .cam-toggle{display:flex;flex-direction:column;gap:4px;}
 .cam-toggle-btn{
   background:transparent;border:none;color:var(--text-dim);font-size:10px;font-weight:700;
@@ -171,12 +187,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .cam-toggle-btn.active{background:var(--panel-solid);color:var(--text);}
 
 .shutter-btn{
-  width:50px;height:50px;border-radius:50%;background:transparent;border:3px solid var(--text);
+  width:48px;height:48px;border-radius:50%;background:transparent;border:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
 }
-.shutter-inner{width:38px;height:38px;border-radius:50%;background:var(--text);transition:all .15s;}
+.shutter-inner{width:48px;height:48px;border-radius:50%;background:#d6dade;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
 .shutter-btn.video-mode .shutter-inner{background:var(--accent-danger);}
-.shutter-btn.recording .shutter-inner{border-radius:6px;width:22px;height:22px;background:var(--accent-danger);}
+.shutter-btn.recording .shutter-inner{border-radius:8px;width:26px;height:26px;background:var(--accent-danger);}
+
+.icon-plain-btn{
+  background:none;border:none;color:var(--text);width:26px;height:26px;cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+.icon-plain-btn svg{width:22px;height:22px;}
 
 /* ---------- telemetry bottom-center (gerçek DJI Fly stili: ok + değer / etiket + değer) ---------- */
 #telemetry{
@@ -192,9 +214,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 
 /* ---------- harita (Leaflet, gerçek OSM) ---------- */
 #minimap{
-  position:absolute; bottom:150px; left:16px; width:110px; height:110px; border-radius:50%;
-  border:2px solid var(--line); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
-  background:#10201a;
+  position:absolute; bottom:150px; left:calc(16px + env(safe-area-inset-left,0)); width:110px; height:110px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.22); overflow:hidden; pointer-events:auto; transition:all .25s ease; z-index:30;
+  background:rgba(10,12,14,0.92);
 }
 #minimap.expanded{
   width:min(520px, 88vw); height:min(420px, 60vh); border-radius:14px; bottom:56px; left:50%; transform:translateX(-50%);
@@ -202,8 +224,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 }
 #mapCanvas{position:absolute; inset:0;}
 #mapExpandBtn{
-  position:absolute; top:6px; right:6px; z-index:1000; width:26px; height:26px; border-radius:6px;
-  background:rgba(15,18,22,0.85); border:1px solid var(--line); color:var(--text); font-size:13px; cursor:pointer;
+  position:absolute; bottom:6px; right:6px; z-index:1000; width:24px; height:24px; border-radius:6px;
+  background:rgba(15,18,22,0.9); border:1px solid var(--line); color:var(--text); font-size:12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; padding:0;
 }
 #mapPickHint{
   display:none; position:absolute; bottom:8px; left:50%; transform:translateX(-50%); z-index:1000;
@@ -217,14 +240,46 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 }
 .home-marker{width:12px;height:12px;border-radius:50%;background:var(--accent-danger);border:2px solid #fff;}
 
+/* DJI Fly'daki gibi: küçük haritanın üstünde dönen pusula halkası (N gerçek kuzeyi
+   gösterir, ortadaki ok sabit — drone'un burnunu/yönünü temsil eder). */
+#compassRing{
+  position:absolute; inset:6px; border-radius:50%; pointer-events:none; z-index:5;
+  border:1px solid rgba(255,255,255,0.18);
+  transition:transform .1s linear;
+}
+/* radar tarzı noktalı iç halka (DJI Fly'daki gibi) */
+#compassRing::before{
+  content:""; position:absolute; inset:14px; border-radius:50%;
+  border:1px dashed rgba(255,255,255,0.25);
+}
+.compass-tick{
+  position:absolute; left:50%; top:50%; font-size:10px; font-weight:700; color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,0.85); line-height:1;
+}
+.compass-tick.n{
+  transform:translate(-50%,-50%) translateY(-42px); color:#fff;
+  background:#ffcf4d; color:#221a00; padding:1px 4px; border-radius:3px;
+}
+.compass-tick.e{ transform:translate(-50%,-50%) translateX(42px); }
+.compass-tick.s{ transform:translate(-50%,-50%) translateY(42px); }
+.compass-tick.w{ transform:translate(-50%,-50%) translateX(-42px); }
+#compassArrow{
+  position:absolute; left:50%; top:50%; z-index:6; pointer-events:none;
+  margin-left:-6px; margin-top:-24px; width:0; height:0;
+  border-left:6px solid transparent; border-right:6px solid transparent;
+  border-bottom:22px solid #fff; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+}
+#minimap.expanded #compassRing, #minimap.expanded #compassArrow{display:none;}
+
 /* ---------- warnings ---------- */
 #warnings{position:absolute; top:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center;}
 .warn-toast{background:rgba(255,77,79,0.92); color:#fff; font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:8px;}
 
 /* ---------- bottom control bar ---------- */
 #bottombar{
-  position:absolute; bottom:0; left:0; right:0; height:150px;
-  display:flex; align-items:center; justify-content:space-between; padding:0 20px 14px;
+  position:absolute; bottom:0; left:0; right:0; min-height:150px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 calc(20px + env(safe-area-inset-right,0)) calc(14px + env(safe-area-inset-bottom,0)) calc(20px + env(safe-area-inset-left,0));
   pointer-events:none;
 }
 .joy-wrap{pointer-events:auto; display:flex; flex-direction:column; align-items:center; gap:4px;}
@@ -261,13 +316,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 .hold-btn span{position:relative; z-index:1;}
 
 #gimbalHint{
-  position:absolute; bottom:150px; right:16px; background:var(--panel); border:1px solid var(--line);
+  position:absolute; bottom:150px; right:calc(16px + env(safe-area-inset-right,0)); background:var(--panel); border:1px solid var(--line);
   border-radius:10px; padding:8px 10px; font-size:11px; color:var(--text-dim); max-width:150px; line-height:1.5;
 }
 
 #startOverlay{
-  position:absolute; inset:0; background:#05070a; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:16px; z-index:50; pointer-events:auto; text-align:center; padding:20px;
+  position:absolute; inset:0; background:#05070a; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; justify-content:safe center;
+  gap:16px; z-index:50; pointer-events:auto; text-align:center;
+  padding:calc(20px + env(safe-area-inset-top,0)) calc(20px + env(safe-area-inset-right,0)) calc(20px + env(safe-area-inset-bottom,0)) calc(20px + env(safe-area-inset-left,0));
+  overflow-y:auto;
 }
 #startOverlay h1{font-size:22px; margin:0;}
 #startOverlay p{color:var(--text-dim); max-width:460px; font-size:13.5px; line-height:1.6; margin:0;}
@@ -305,4 +363,61 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
   #minimap{bottom:170px; width:90px;height:90px;}
   #gimbalHint{display:none;}
   .joy-base{width:100px;height:100px;}
+}
+
+/* ---------- telefon yatay modu (oyun landscape'te oynanıyor, ama telefon yatayda
+   yüksekliği çok kısıtlı — asıl darlık genişlikte değil yükseklikte oluyor) ---------- */
+@media (max-height:500px) and (orientation:landscape){
+  #topbar{min-height:40px;}
+  .top-group{gap:8px;}
+  .pill{padding:3px 7px; font-size:10.5px; gap:4px;}
+  .mode-badge{width:20px;height:20px;font-size:11px;}
+  .icon-btn{width:26px;height:26px;}
+  .icon-plain{width:18px;height:18px;}
+  .icon-plain svg{width:16px;height:16px;}
+  #warnings{top:56px;}
+
+  #sensorCluster{top:42px; grid-template-columns:repeat(3,18px); grid-template-rows:repeat(3,18px); padding:4px; gap:2px;}
+
+  #rightPanel{top:46px; padding:6px; gap:8px;}
+  .zoom-badge{width:30px;height:30px;font-size:11px;}
+  .shutter-btn{width:38px;height:38px;}
+  .shutter-inner{width:38px;height:38px;}
+  .icon-plain-btn{width:20px;height:20px;}
+  .icon-plain-btn svg{width:18px;height:18px;}
+
+  #gimbalHint{display:none;}
+
+  #telemetry{bottom:100px; padding:5px 10px; gap:8px;}
+  .tele-row{font-size:12px;}
+  .tele-row.tele-sub{font-size:10px;}
+  .tele-div{height:20px;}
+
+  #minimap{bottom:100px; width:60px; height:60px;}
+  #minimap.expanded{bottom:40px;}
+  .compass-tick{font-size:8px;}
+  .compass-tick.n{transform:translate(-50%,-50%) translateY(-22px);}
+  .compass-tick.e{transform:translate(-50%,-50%) translateX(22px);}
+  .compass-tick.s{transform:translate(-50%,-50%) translateY(22px);}
+  .compass-tick.w{transform:translate(-50%,-50%) translateX(-22px);}
+  #compassArrow{margin-left:-4px; margin-top:-13px; border-left-width:4px; border-right-width:4px; border-bottom-width:12px;}
+  #mapExpandBtn{width:20px;height:20px;font-size:10px;}
+
+  #bottombar{min-height:96px; padding-bottom:calc(6px + env(safe-area-inset-bottom,0));}
+  .joy-wrap{gap:2px;}
+  .joy-base{width:76px;height:76px;}
+  .joy-stick{width:30px;height:30px;margin:-15px;}
+  .joy-caption{display:none;}
+
+  #midControls{gap:4px;}
+  .mode-switch{padding:2px;}
+  .mode-btn{width:28px;height:20px;font-size:10.5px;}
+  .action-row{gap:6px;}
+  .action-btn{padding:5px 8px;font-size:10px;min-width:48px;gap:1px;}
+
+  #startOverlay{gap:8px; padding-top:calc(10px + env(safe-area-inset-top,0)); padding-bottom:calc(10px + env(safe-area-inset-bottom,0));}
+  #startOverlay h1{font-size:16px;}
+  #startOverlay p{font-size:11.5px; line-height:1.4;}
+  #aircraftGrid{gap:6px;}
+  .aircraft-card{padding:8px;}
 }
