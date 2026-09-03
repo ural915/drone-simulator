@@ -1,10 +1,9 @@
-// Cesium ion access token'ı buraya YAZMA — bu dosya public repoya gidiyor, herkes görür ve
-// token'ını çalıp kotanı/faturanı tüketebilir. Bunun yerine Ayarlar > Hakkında sekmesinden kendi
-// token'ını (cesium.com/ion adresinden ücretsiz alınır) yapıştır; sadece kendi tarayıcında
-// localStorage'da saklanır, repoya hiç gitmez. Token olmadan da uygulama gerçek uydu/hava
-// fotoğrafıyla (ücretsiz Esri World Imagery) çalışır — token yalnızca Google'ın fotogerçekçi
-// 3D bina modelleri için isteğe bağlıdır.
-export const CESIUM_ION_TOKEN = "";
+// Cesium ion access token — açılışta doğrudan Google'ın fotogerçekçi 3D bina modelleriyle
+// başlaması için varsayılan olarak dolduruldu. NOT: bu dosya public repoda olduğu için bu
+// token'ı gören herkes kullanabilir; istersen cesium.com/ion'dan iptal edip yeni bir tane
+// oluşturabilir, ya da Ayarlar > Hakkında'dan kendi token'ını girip bunu geçersiz kılabilirsin
+// (orada girilen token sadece tarayıcıda saklanır, repoya gitmez).
+export const CESIUM_ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6InN2bFJqd2p4cWlFYVBvenIiLCJqdGkiOiI4NDcyMzg4MS0yOTk1LTQ0ODctOWM4NC0yZWQwYjBkNDQ0N2IiLCJpZCI6NDc4MjQ3LCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODgyODcyODB9.MpB5xYKuEVk2sGc1LIxarE8y71KbcLvoe6jFCPff9X8";
 
 // Google Photorealistic 3D Tiles - Cesium ion asset ID (hesabında "Google Photorealistic
 // 3D Tiles" varlığını eklemen gerekir: ion.cesium.com/assets -> Add -> Google Photorealistic 3D Tiles)
